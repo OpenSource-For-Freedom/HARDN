@@ -11,27 +11,9 @@
 #        Date: 4/5-12/2025             #
 ########################################
 
-# Check for root privileges
+# Ensure the script is run as root
 if [ "$(id -u)" -ne 0 ]; then
     echo "This script must be run as root. Use: sudo ./setup.sh"
-    exit 1
-fi
-
-# Check if the script is being run by a valid user account
-if ! id "$(whoami)" > /dev/null 2>&1; then
-    echo "This script must be run by a valid user account."
-    exit 1
-fi
-
-# Check if the user has sudo/admin privileges
-if ! groups "$(whoami)" | grep -q '\bsudo\b'; then
-    echo "This script requires sudo/admin privileges. Add the user to the sudo group."
-    exit 1
-fi
-
-# Check if a separate user account is set up
-if [ "$(whoami)" = "root" ]; then
-    echo "This script must not be run directly as root. Please use a separate user account with sudo privileges."
     exit 1
 fi
 
@@ -124,7 +106,7 @@ EOF
     systemctl restart fail2ban
     printf "\033[1;31m[+] Fail2Ban configured and restarted.\033[0m\n"
 }
-}
+
 
 # Install chkrootkit, LMD, and rkhunter
 install_additional_tools() {
@@ -157,7 +139,7 @@ reload_apparmor() {
         printf "\033[1;31m[-] Warning: AppArmor may not be running correctly\033[0m\n"
     fi
 }
-}
+
 
 # Configure cron jobs
 configure_cron() {
@@ -167,9 +149,9 @@ configure_cron() {
      grep -v "chkrootkit" | \
      grep -v "maldet --update" | \
      grep -v "maldet --scan-all" | \
-    grep -v "setenforce 1" | \
-    grep -v "oscap xccdf eval" | \ 
-    crontab -) || true
+     grep -v "setenforce 1" | \
+     grep -v "oscap xccdf eval" | \ 
+     crontab -) || true
     (crontab -l 2>/dev/null || true) > mycron
     cat >> mycron << 'EOFCRON'
 0 1 * * * lynis audit system --cronjob >> /var/log/lynis_cron.log 2>&1
@@ -190,7 +172,7 @@ disable_usb_storage() {
     modprobe -r usb-storage || printf "\033[1;31m[-] Warning: USB storage module in use, cannot unload.\033[0m\n"
     printf "\033[1;31m[+] USB storage devices blocked successfully.\033[0m\n"
 }
-}
+
 
 # OPENSCAP- did have some issues with bindings
 install_openscap() {
@@ -237,7 +219,7 @@ setup_complete() {
     echo "======================================================="
 }
 
-# Main function
+
 main() {
     update_system_packages
     install_pkgdeps
@@ -255,5 +237,5 @@ main() {
     setup_complete
 }
 
-# Run the main function
+
 main

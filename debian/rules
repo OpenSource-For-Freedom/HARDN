@@ -1,22 +1,31 @@
 #!/usr/bin/make -f
 
-# This is the debian/rules file 
-
+# Enable verbose output for debugging
 export DH_VERBOSE=1
 
+# Default target
 %:
-    dh $@
+	dh $@
 
+# Override the build step
 override_dh_auto_build:
-    echo "Building HARDN endpoint..."
-    mkdir -p build
-    gcc -o build/hardn-endpoint src/hardn-endpoint.c
+	@echo "Building HARDN endpoint..."
+	@mkdir -p build
+	@if [ -f src/hardn-endpoint.c ]; then \
+            gcc -o build/hardn-endpoint src/hardn-endpoint.c; \
+        else \
+            echo "Error: src/hardn-endpoint.c not found!"; \
+            exit 1; \
+        fi
 
-override_dh_auto_install:  
-    echo "Installing HARDN endpoint..."
-    mkdir -p $(DESTDIR)/usr/local/bin
-    cp build/hardn-endpoint $(DESTDIR)/usr/local/bin/
+# Override the install step
+override_dh_auto_install:
+	@echo "Installing HARDN endpoint..."
+	@mkdir -p $(DESTDIR)/usr/local/bin
+	@cp build/hardn-endpoint $(DESTDIR)/usr/local/bin/
+	@bash debian/hardn-install.sh
 
+# Override the clean step
 override_dh_auto_clean:
-    echo "Cleaning up build artifacts..."
-    rm -rf build/
+	@echo "Cleaning up build artifacts..."
+	@rm -rf build/

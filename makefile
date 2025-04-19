@@ -1,3 +1,4 @@
+# filepath: /home/tim/DEV/HARDN/makefile
 # HARDN makefile
 
 # Compiler
@@ -14,18 +15,18 @@ OBJS = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SRCS))
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-    @mkdir -p $(BIN_DIR)
-    $(CC) $(CFLAGS) -o $@ $^
+	@mkdir -p $(BIN_DIR)
+	$(CC) $(CFLAGS) -o $@ $^
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
-    @mkdir -p $(BUILD_DIR)
-    $(CC) $(CFLAGS) -c $< -o $@
+	@mkdir -p $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 install: $(TARGET)
-    @mkdir -p $(DESTDIR)/usr/bin
-    cp $(TARGET) $(DESTDIR)/usr/bin/
+	@mkdir -p $(DESTDIR)/usr/bin
+	cp $(TARGET) $(DESTDIR)/usr/bin/
 
 clean:
-    rm -rf $(BUILD_DIR) $(BIN_DIR)
+	rm -rf $(BUILD_DIR) $(BIN_DIR)
 
 .PHONY: all clean install

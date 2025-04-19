@@ -7,5 +7,8 @@ HARDN Security Interface - Main launcher script
 
 from gui.app import main
 
-if __name__ == "__main__":
+def launch_gui():
     main()
+
+if __name__ == "__main__":
+    launch_gui()
