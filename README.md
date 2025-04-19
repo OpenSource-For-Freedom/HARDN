@@ -68,50 +68,30 @@ office@cybersynapse.ro
 
 <p align="center">
 =====FILE STRUCTURE=====
+PROPOSED SHIFT FROM PYTHON 
 
 ```
 HARDN/
-├── .github/                # workflows
-│   └── workflows/
-│       ├── deb-build.yml
-│       ├── python_test.yml
-│       └── shell_test.yml
-├── debian/                 # packaging files
-│   ├── changelog
-│   ├── compat
-│   ├── control
-│   ├── rules
-│   ├── hardn.install
-│   └── ...
-├── src/                    # Source code
-│   ├── gui/                # GUI-related files
-│   │   ├── __init__.py
-│   │   ├── app.py
-│   │   ├── main_window.py
-│   │   ├── docs/           # Documentation 
-│   │   ├── controllers/
-│   │   ├── models/
-│   │   ├── resources/
-│   │   ├── utils/
-│   │   └── views/
-│   ├── setup/              # Setup s
-│   │   ├── __init__.py
+├── debian/                  # Debian packaging files (control, rules, postinst, etc.)
+├── src/
+│   ├── kernel/              # Kernel-level hardening code (C)
+│   │   └── kernal.c
+│   ├── orchestrator/        # Core logic (Rust)
+│   │   ├── main.rs
+│   │   └── Cargo.toml
+│   ├── setup/               # Setup logic and system package handling (Bash)
 │   │   ├── setup.sh
-│   │   └── packages.sh
-│   ├── kernel.rs           # Kernel hardening 
-│   ├── hardn.py            # Main entry point
-│   └── ...
-├── tests/                  # file and unit integration tests
-│   ├── test_hardn.py
-│   ├── test_kernel.rs
-│   ├── test_main.c
-│   └── ...
-├── build/                  # build artifacts (ignored in `.gitignore`)
-├── dist/                   # Distribution packages (ignored in `.gitignore`)
-├── README.md               # Project documentation
-├── Makefile                # Build automation
-├── requirements.txt        # Python dependencies
-├── pyproject.toml          # Python project metadata
-└── environment.yml         # Conda environment file (if applicable)
+│   │   ├── packages.sh
+│   │   └── postinstall.sh
+│   ├── gui/                 # GUI (JS/CSS Frontend)
+│   │   ├── index.html
+│   │   ├── app.js
+│   │   └── style.css
+│   └── common/              # Shared resources, logos, constants
+│       └── assets/
+│           └── HARDN.png
+├── hardn.desktop            # Optional for menu launch
+├── hardn                    # Executable entry point
+└── README.md
 ```
 </p>
