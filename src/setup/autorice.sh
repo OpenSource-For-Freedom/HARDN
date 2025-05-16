@@ -6,50 +6,32 @@
 #                                      #
 #       Author: Chris Bingham          #
 #           Date: 4/5/2025             #
-#         Updated: 5/14/2025           #
+#         Updated: 5/16/2025           #
 #                                      #
 ########################################
 
-# Notes one updated script: Change the name of this script to autorice.sh ???
-# Some changes. This auto rice script has been moved to the repo's home directory.
-# makes for easier access and avoids possible naming conflicts,
-# as this repo contains directories and scripts with similar setup names.
-# TODO: Need to make a /tools dir like dev-testing, lightening up the hardn-setup
-# fine tune the menu, no gui needed, and leave  it as .deb build package
-# clone repo then,
-# build the debian package
-# sudo dpkg-buildpackage -us -uc
-# isntall the package
-# sudo dpkg -i ../hardn_*.deb
-# run the setup
-# sudo hardn
-
-# Parent fork main branch git url: https://github.com/OpenSource-For-Freedom/HARDN.git
 
 # urls to be changed after merge
 repo="https://github.com/LinuxUser255/HARDN.git"
 progsfile="https://raw.githubusercontent.com/LinuxUser255/HARDN/refs/heads/LinuxUser255-main/progs.csv"
 repobranch="LinuxUser255-main"
-name=$(USER)
+name=$(whoami)
 
 # Check for root privileges
 if [ "$(id -u)" -ne 0 ]; then
-   echo ""
-   echo "This script must be run as root."
-   # change the fork url to the Parent fork above after merge with Tim's. Same curl -LO command.
-   # curl -LO https://raw.githubusercontent.com/LinuxUser255/HARDN/refs/heads/LinuxUser255-main/setup.sh
-   # sh setup.sh\
-   exit 1
+        echo ""
+        echo "This script must be run as root."
+        exit 1
 fi
 
 installpkg() {
        dpkg -s "$1" >/dev/null 2>&1 || sudo apt install -y "$1" >/dev/null 2>&1
 }
 
+# Log to stderr and exit with failure.
 error() {
-	# Log to stderr and exit with failure.
-	printf "%s\n" "$1" >&2
-	exit 1
+        printf "%s\n" "$1" >&2
+        exit 1
 }
 
 welcomemsg() {
@@ -88,19 +70,18 @@ install_package_dependencies() {
                 whiptail --infobox "$1 is already installed." 7 60
             fi
 }
-    # Return empty for now as the original implementation is missing
 
 # Function to install packages with visual feedback
-aptinstall() {
-        whiptail --title "HARDN Installation" \
-            --infobox "Installing \`$1\` ($n of $total) from the repository. $1 $2" 9 70
-        echo "$aptinstalled" | grep -q "^$1$" && return 1
-        apt-get install -y "$1" >/dev/null 2>&1
-        # Add to installed packages list
-        aptinstalled="$aptinstalled\n$1"
-}
-
-
+  aptinstall() {
+          package="$1"
+          comment="$2"
+          whiptail --title "HARDN Installation" \
+              --infobox "Installing \`$package\` ($n of $total) from the repository. $comment" 9 70
+          echo "$aptinstalled" | grep -q "^$package$" && return 1
+          apt-get install -y "$package" >/dev/null 2>&1
+          # Add to installed packages list
+          aptinstalled="$aptinstalled\n$package"
+  }
 
 maininstall() {
        	# Installs all needed programs from main repo.
@@ -122,6 +103,35 @@ gitdpkgbuild() {
         cd - >/dev/null 2>&1 || exit
 }
 
+build_hardn_package() {
+    whiptail --infobox "Building HARDN Debian package..." 7 60
+
+    # Create temporary directory
+    temp_dir=$(mktemp -d)
+    cd "$temp_dir" || exit 1
+
+    # Clone the repository
+    git clone --depth=1 -b main-patch https://github.com/OpenSource-For-Freedom/HARDN.git
+    cd HARDN || exit 1
+
+    # Build the package
+    whiptail --infobox "Running dpkg-buildpackage..." 7 60
+    dpkg-buildpackage -us -uc
+
+    # Install the package
+    cd .. || exit 1
+    whiptail --infobox "Installing HARDN package..." 7 60
+    dpkg -i hardn_*.deb
+
+    # Handle dependencies if needed
+    apt-get install -f -y
+
+    # Clean up
+    cd / || exit 1
+    rm -rf "$temp_dir"
+
+    whiptail --infobox "HARDN package installed successfully" 7 60
+}
 
 # Main loop to parse and install
 installationloop() {
@@ -209,7 +219,17 @@ enable_services() {
 }
 
 # Install chkrootkit, LMD, and rkhunter
-install_additional_tools() {
+  install_additional_tools() {
+          printf "\033[1;31m[+] Installing chkrootkit...\033[0m\n"
+          apt install -y chkrootkit
+
+          # Initialize the variable
+          install_maldet_failed=false
+
+          # Create a temporary directory for the installation
+          # ... rest of the function
+
+
         printf "\033[1;31m[+] Installing chkrootkit...\033[0m\n"
         apt install -y chkrootkit
 
@@ -280,7 +300,8 @@ install_additional_tools() {
 
 # Reload AppArmor profiles
 reload_apparmor() {
-        printf "\033[1;31m[+] Reloading AppArmor profiles...\033[0m\n"
+  whiptail --infobox "Reloading AppArmor profiles..." 7 40
+        #printf "\033[1;31m[+] Reloading AppArmor profiles...\033[0m\n"
 
         # Use systemd to reload AppArmor instead of manually parsing files
         if systemctl is-active --quiet apparmor; then
@@ -301,7 +322,8 @@ reload_apparmor() {
 
 # Configure cron jobs
 configure_cron() {
-        printf "\033[1;31m[+] Configuring cron jobs...\033[0m\n"
+  	whiptail --infobox "Configuring cron jobs... \"$name\"..." 7 50
+        #printf "\033[1;31m[+] Configuring cron jobs...\033[0m\n"
 
         # Remove existing cron jobs
         (crontab -l 2>/dev/null | grep -v "lynis audit system --cronjob" | \
@@ -327,7 +349,8 @@ EOFCRON
 
 # Disable USB storage
 disable_usb_storage() {
-         printf "\033[1;31m[+] Disabling USB storage...\033[0m\n"
+     whiptail --infobox "Disabling USB storage..." 7 50
+         #printf "\033[1;31m[+] Disabling USB storage...\033[0m\n"
          echo 'blacklist usb-storage' > /etc/modprobe.d/usb-storage.conf
          if modprobe -r usb-storage 2>/dev/null; then
              printf "\033[1;31m[+] USB storage successfully disabled.\033[0m\n"
@@ -338,7 +361,8 @@ disable_usb_storage() {
 
 # Update system packages again
 update_sys_pkgs() {
-            printf "\033[1;31m[-] System update.\033[0m\n"
+     whiptail --infobox "Updating system packages..." 7 50
+            #printf "\033[1;31m[-] System update.\033[0m\n"
         if ! update_system_packages; then
              printf "\033[1;31m[-] System update failed.\033[0m\n"
             whiptail --title "System update failed"
@@ -348,22 +372,21 @@ update_sys_pkgs() {
 
 
 finalize() {
-    	whiptail --title "All done!" \
-    		--msgbox "Congrats! Provided there were no hidden errors, the script completed successfully and all the programs and configuration files should be in place.\\n\\nPlease reboot to apply installation.\\n\\n.t Luke" 13 80
+        whiptail --title "All done!" \
+            --msgbox "Congrats! Provided there were no hidden errors, the script completed successfully and all the programs and configuration files should be in place.\\n\\nPlease reboot to apply installation." 12 80
 }
-
 
 # Main function
 main() {
         welcomemsg || error "User exited."
         preinstallmsg || error "User exited."
         update_system_packages
-        #install_pkgdeps
         aptinstall
         maininstall
         gitdpkgbuild
+        build_hardn_package
         installationloop
-        config_selinu
+        config_selinux
         check_security_tools
         configure_ufw
         enable_services
