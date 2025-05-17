@@ -12,9 +12,9 @@
 
 
 # urls to be changed after merge
-repo="https://github.com/LinuxUser255/HARDN.git"
-progsfile="https://raw.githubusercontent.com/LinuxUser255/HARDN/refs/heads/LinuxUser255-main/progs.csv"
-repobranch="LinuxUser255-main"
+repo="https://github.com/OpenSource-For-Freedom/HARDN/"
+progsfile="https://raw.githubusercontent.com/LinuxUser255/HARDN/refs/heads/main-dev/progs.csv"
+repobranch="main-patch"
 name=$(whoami)
 
 # Check for root privileges
@@ -64,8 +64,8 @@ install_package_dependencies() {
         progsfile="$1"
             if ! dpkg -s "$1" >/dev/null 2>&1; then
                 whiptail --infobox "Installing $1... ($2)" 7 60
-                sudo apt-get update -qq
-                sudo apt-get install -y "$1"
+                sudo apt install update -qq
+                sudo apt install -y "$1"
             else
                 whiptail --infobox "$1 is already installed." 7 60
             fi
@@ -99,8 +99,28 @@ gitdpkgbuild() {
         git clone --depth=1 "$repo_url" "$dir" >/dev/null 2>&1
         cd "$dir" || exit
         whiptail --infobox "Building and installing $description..." 7 70
-        sudo dpkg-buildpackage -us -uc 2>&1 && sudo dpkg -i  ../hardn_*.deb
-        cd - >/dev/null 2>&1 || exit
+
+        # Check and isntall build dependencies
+        whiptail --infobox "Checking build dependencies for $description..." 7 70
+        build_deps=$(dpkg-checkbuilddeps 2>&1 | grep -oP 'Unmet build dependencies: \K.*')
+        if [ -n "$build_deps" ];  then
+          whiptail --infobox "Installing build dependencies: $build_deps" 7 70
+          apt install -y $build_deps >/dev/null 2>&1
+        fi
+
+        # Run dpkg-source before building
+       dpkg-source --before-build . >/dev/null 2>&1
+
+        # Build and install the package
+        if sudo dpkg-buildpackage -u -uc 2>&1; then
+          sudo dpkg -i ../hardn.deb
+        else
+          whiptail --infobox "$description Failed to build package. Please check build dependencies." 10 60
+          # try to install common build dependencies
+          apt install -y debhelper-compat devscripts git-buildpackage
+          # Try building again
+          sudo dpkg-buildpackage -us -uc 2>&1 && sudo dpkg -i  ../hardn.deb
+        fi
 }
 
 build_hardn_package() {
