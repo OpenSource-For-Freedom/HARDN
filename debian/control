@@ -1,0 +1,79 @@
+Source: hardn-xdr
+Section: admin
+Priority: optional
+Maintainer: Christopher Bingham <office@cybersynapse.ro>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Homepage: https://github.com/OpenSource-For-Freedom/HARDN
+Vcs-Git: https://github.com/OpenSource-For-Freedom/HARDN.git
+Vcs-Browser: https://github.com/OpenSource-For-Freedom/HARDN
+
+Package: hardn-xdr
+Architecture: all
+Depends: ${misc:Depends},
+ auditd,
+ audispd-plugins,
+ suricata,
+ fail2ban,
+ rkhunter,
+ chkrootkit,
+ unhide,
+ debsums,
+ lynis,
+ clamav,
+ clamav-daemon,
+ clamav-freshclam,
+ yara,
+ aide,
+ aide-common,
+ rsyslog,
+ logrotate,
+ needrestart,
+ apt-listchanges,
+ apt-listbugs,
+ unattended-upgrades,
+ apt-transport-https,
+ ca-certificates,
+ software-properties-common,
+ lsb-release,
+ gnupg,
+ openssh-server,
+ openssh-client,
+ ufw,
+ systemd-timesyncd,
+ apparmor,
+ apparmor-profiles,
+ apparmor-utils,
+ firejail,
+ libpam-pwquality,
+ libpam-google-authenticator,
+ libpam-tmpdir,
+ curl,
+ wget,
+ lsof,
+ psmisc,
+ procps,
+ git,
+ whiptail
+Recommends: nmap
+Description: Linux Security Hardening Extended Detection and Response
+ HARDN-XDR is a comprehensive security hardening solution for Debian-based
+ Linux distributions. It implements STIG (Security Technical Implementation
+ Guide) compliance standards and provides advanced endpoint detection and
+ response capabilities.
+ .
+ Features include:
+  - STIG compliance implementation
+  - Comprehensive malware detection and prevention
+  - System integrity monitoring with AIDE
+  - Intrusion detection with Suricata
+  - Rootkit detection with rkhunter and chkrootkit
+  - Centralized logging and monitoring
+  - Network security hardening
+  - Kernel security hardening
+  - Process accounting and system statistics
+  - Automated security assessment with Lynis
+ .
+ This package is designed for security-conscious environments requiring
+ hardened systems that comply with government and enterprise security
+ standards.

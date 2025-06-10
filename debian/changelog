@@ -1,0 +1,14 @@
+hardn-xdr (2.0.0-1) bookworm; urgency=medium
+
+  * Initial Debian package release
+  * Refactored monolithic script into modular architecture
+  * Added proper CLI interface with argument parsing
+  * Implemented FHS-compliant directory structure
+  * Added systemd service integration
+  * Enhanced logging and error handling
+  * Added backup/restore functionality
+  * Improved STIG compliance implementation
+  * Added comprehensive documentation
+  * Created automated packaging and testing workflows
+
+ -- Christopher Bingham <office@cybersynapse.ro>  $(date -R)

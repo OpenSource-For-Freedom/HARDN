@@ -1,0 +1,256 @@
+name: Build and Test HARDN-XDR
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  DEBIAN_FRONTEND: noninteractive
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: Code Quality and Linting
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install shellcheck
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y shellcheck
+    
+    - name: Lint shell scripts
+      run: |
+        find . -name "*.sh" -type f -exec shellcheck {} \;
+        shellcheck usr/bin/hardn
+    
+    - name: Check file permissions
+      run: |
+        # Check that scripts are executable
+        test -x usr/bin/hardn
+        test -x debian/rules
+        test -x debian/postinst
+        test -x debian/postrm
+        
+    - name: Validate debian packaging
+      run: |
+        sudo apt-get install -y lintian
+        # Basic package structure validation
+        test -f debian/control
+        test -f debian/changelog  
+        test -f debian/copyright
+        test -f debian/rules
+
+  build:
+    runs-on: ubuntu-latest
+    name: Build Debian Package
+    needs: lint
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install build dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y debhelper-compat devscripts build-essential
+    
+    - name: Set up package structure
+      run: |
+        # Ensure proper directory structure
+        mkdir -p debian/hardn-xdr/usr/bin
+        mkdir -p debian/hardn-xdr/usr/share/hardn/modules
+        mkdir -p debian/hardn-xdr/etc/hardn
+        mkdir -p debian/hardn-xdr/var/log/hardn
+        mkdir -p debian/hardn-xdr/lib/systemd/system
+    
+    - name: Update changelog with timestamp
+      run: |
+        # Fix the changelog timestamp
+        sed -i "s/\$(date -R)/$(date -R)/" debian/changelog
+    
+    - name: Build package
+      run: |
+        dpkg-buildpackage -us -uc -b
+    
+    - name: Check package with lintian
+      run: |
+        sudo apt-get install -y lintian
+        lintian ../hardn-xdr_*.deb || true  # Don't fail on lintian warnings for now
+    
+    - name: Upload package artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: hardn-xdr-deb
+        path: ../hardn-xdr_*.deb
+
+  test:
+    runs-on: ubuntu-latest
+    name: Test Installation and Functionality
+    needs: build
+    
+    strategy:
+      matrix:
+        debian-version: ['debian:12', 'ubuntu:24.04']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download package artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: hardn-xdr-deb
+        path: ./
+    
+    - name: Test in container
+      run: |
+        docker run --rm -v $PWD:/workspace -w /workspace ${{ matrix.debian-version }} bash -c "
+          apt-get update
+          apt-get install -y ./hardn-xdr_*.deb
+          
+          # Test basic functionality
+          hardn --version
+          hardn --help
+          
+          # Test status command (doesn't require root)
+          hardn status || true
+          
+          # Test dry-run mode
+          hardn setup --dry-run --non-interactive || true
+          
+          echo 'Package installation and basic tests completed'
+        "
+
+  security-scan:
+    runs-on: ubuntu-latest
+    name: Security Scanning
+    needs: build
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  integration-test:
+    runs-on: ubuntu-latest
+    name: Integration Testing
+    needs: build
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download package artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: hardn-xdr-deb
+        path: ./
+    
+    - name: Run comprehensive tests
+      run: |
+        # Install the package
+        sudo apt-get update
+        sudo dpkg -i hardn-xdr_*.deb || true
+        sudo apt-get install -f -y  # Fix any dependency issues
+        
+        # Test CLI functionality
+        echo "Testing CLI commands..."
+        hardn --version
+        hardn --help
+        
+        # Test configuration
+        echo "Testing configuration..."
+        sudo test -f /etc/hardn/hardn.conf
+        sudo test -d /var/log/hardn
+        
+        # Test systemd service
+        echo "Testing systemd service..."
+        sudo systemctl status hardn-monitor || true
+        
+        # Test dry-run hardening
+        echo "Testing dry-run hardening..."
+        sudo hardn setup --dry-run --non-interactive
+        
+        # Test audit functionality
+        echo "Testing audit functionality..."
+        sudo hardn audit lynis --dry-run || true
+        
+        echo "Integration tests completed successfully"
+
+  release:
+    runs-on: ubuntu-latest
+    name: Create Release
+    needs: [lint, build, test, integration-test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download package artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: hardn-xdr-deb
+        path: ./
+    
+    - name: Get version from changelog
+      id: version
+      run: |
+        VERSION=$(head -1 debian/changelog | sed 's/.*(\(.*\)).*/\1/')
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+    
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.version.outputs.version }}
+        release_name: HARDN-XDR v${{ steps.version.outputs.version }}
+        body: |
+          ## HARDN-XDR v${{ steps.version.outputs.version }}
+          
+          ### Changes
+          - Refactored into modular architecture
+          - Added proper Debian packaging
+          - Implemented CLI interface
+          - Added comprehensive logging and error handling
+          - Enhanced security compliance
+          
+          ### Installation
+          ```bash
+          wget https://github.com/OpenSource-For-Freedom/HARDN/releases/download/v${{ steps.version.outputs.version }}/hardn-xdr_${{ steps.version.outputs.version }}_all.deb
+          sudo dpkg -i hardn-xdr_${{ steps.version.outputs.version }}_all.deb
+          sudo apt-get install -f  # Fix any dependency issues
+          ```
+          
+          ### Usage
+          ```bash
+          hardn setup              # Interactive system hardening
+          hardn audit              # Run security audit
+          hardn status             # Show system status
+          hardn --help             # Show all commands
+          ```
+        draft: false
+        prerelease: false
+    
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./hardn-xdr_${{ steps.version.outputs.version }}_all.deb
+        asset_name: hardn-xdr_${{ steps.version.outputs.version }}_all.deb
+        asset_content_type: application/vnd.debian.binary-package

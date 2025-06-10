@@ -1,0 +1,52 @@
+#!/bin/bash
+
+set -e
+
+case "$1" in
+    configure)
+        # Create hardn user if it doesn't exist
+        if ! getent passwd hardn >/dev/null; then
+            adduser --system --group --home /var/lib/hardn --shell /bin/false hardn
+        fi
+        
+        # Set proper permissions on directories
+        chown -R hardn:hardn /var/log/hardn
+        chmod 750 /var/log/hardn
+        
+        # Set permissions on configuration files
+        chown root:hardn /etc/hardn
+        chmod 750 /etc/hardn
+        
+        # Create backup directory
+        mkdir -p /var/lib/hardn/backups
+        chown hardn:hardn /var/lib/hardn/backups
+        chmod 750 /var/lib/hardn/backups
+        
+        # Initialize configuration if first install
+        if [ ! -f /etc/hardn/hardn.conf ]; then
+            cp /usr/share/hardn/templates/hardn.conf /etc/hardn/
+            chown root:hardn /etc/hardn/hardn.conf
+            chmod 640 /etc/hardn/hardn.conf
+        fi
+        
+        # Enable systemd services
+        systemctl daemon-reload
+        systemctl enable hardn-monitor.service
+        
+        echo "HARDN-XDR has been installed successfully."
+        echo "Run 'hardn --help' for usage information."
+        echo "Run 'hardn setup' to perform initial system hardening."
+        ;;
+    
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+    
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0
