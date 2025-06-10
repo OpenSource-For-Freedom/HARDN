@@ -37,33 +37,7 @@ COPY . /hardn/
 RUN chmod +x /hardn/install.sh && \
     chmod +x /hardn/src/setup/hardn-main.sh && \
     chmod +x /hardn/test-hardn-installation.sh && \
-    chmod +x /hardn/test-comprehensive-compliance.sh
-
-# Create a script to run Lynis and check compliance
-RUN echo '#!/bin/bash\n\
-echo "Running Lynis security audit..."\n\
-lynis audit system --quiet --no-colors --log-file /tmp/lynis.log --report-file /tmp/lynis-report.dat\n\
-echo "\n=== LYNIS AUDIT COMPLETE ==="\n\
-echo "Checking compliance score..."\n\
-if [ -f /tmp/lynis-report.dat ]; then\n\
-    HARDENING_INDEX=$(grep "hardening_index" /tmp/lynis-report.dat | cut -d"=" -f2 | tr -d " " 2>/dev/null || echo "0")\n\
-    # Validate that HARDENING_INDEX is numeric\n\
-    if ! echo "$HARDENING_INDEX" | grep -q "^[0-9]\\+$"; then\n\
-        echo "⚠️  Warning: Invalid hardening index format: '\''$HARDENING_INDEX'\'', using 0"\n\
-        HARDENING_INDEX=0\n\
-    fi\n\
-    echo "Hardening Index: $HARDENING_INDEX%"\n\
-    if [ "$HARDENING_INDEX" -ge 90 ]; then\n\
-        echo "✅ PASS: Lynis compliance score is $HARDENING_INDEX% (>= 90%)"\n\
-        exit 0\n\
-    else\n\
-        echo "❌ FAIL: Lynis compliance score is $HARDENING_INDEX% (< 90%)"\n\
-        exit 1\n\
-    fi\n\
-else\n\
-    echo "❌ ERROR: Lynis report file not found"\n\
-    exit 1\n\
-fi' > /hardn/test-lynis-compliance.sh && \
+    chmod +x /hardn/test-comprehensive-compliance.sh && \
     chmod +x /hardn/test-lynis-compliance.sh
 
 # Set default command
