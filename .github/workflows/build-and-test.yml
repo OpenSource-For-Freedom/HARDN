@@ -82,7 +82,7 @@ jobs:
         lintian ../hardn-xdr_*.deb || true  # Don't fail on lintian warnings for now
     
     - name: Upload package artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: hardn-xdr-deb
         path: ../hardn-xdr_*.deb
