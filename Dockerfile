@@ -15,7 +15,8 @@ RUN apt-get update && \
         apt-utils \
         ca-certificates \
         gnupg \
-        lsb-release && \
+        lsb-release \
+        procps && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -34,7 +35,8 @@ COPY . /hardn/
 # Make scripts executable
 RUN chmod +x /hardn/install.sh && \
     chmod +x /hardn/src/setup/hardn-main.sh && \
-    chmod +x /hardn/test-hardn-installation.sh
+    chmod +x /hardn/test-hardn-installation.sh && \
+    chmod +x /hardn/test-comprehensive-compliance.sh
 
 # Create a script to run Lynis and check compliance
 RUN echo '#!/bin/bash\n\

@@ -65,20 +65,29 @@ welcomemsg() {
     echo ""
     echo "HARDN-XDR v${HARDN_VERSION} - Linux Security Hardening Sentinel"
     echo "================================================================"
-    whiptail --title "HARDN-XDR v${HARDN_VERSION}" --msgbox "Welcome to HARDN-XDR v${HARDN_VERSION} - A Debian Security tool for System Hardening\n\nThis will apply STIG compliance, security tools, and comprehensive system hardening." 12 70
-    echo ""
-    echo "This installer will update your system first..."
-    if whiptail --title "HARDN-XDR v${HARDN_VERSION}" --yesno "Do you want to continue with the installation?" 10 60; then
-        true  
+    
+    if [ "$NON_INTERACTIVE_MODE" = false ]; then
+        whiptail --title "HARDN-XDR v${HARDN_VERSION}" --msgbox "Welcome to HARDN-XDR v${HARDN_VERSION} - A Debian Security tool for System Hardening\n\nThis will apply STIG compliance, security tools, and comprehensive system hardening." 12 70
+        echo ""
+        echo "This installer will update your system first..."
+        if whiptail --title "HARDN-XDR v${HARDN_VERSION}" --yesno "Do you want to continue with the installation?" 10 60; then
+            true  
+        else
+            echo "Installation cancelled by user."
+            exit 1
+        fi
     else
-        echo "Installation cancelled by user."
-        exit 1
+        HARDN_STATUS "info" "Running in non-interactive mode - skipping user prompts"
+        echo "This installer will update your system first..."
+        HARDN_STATUS "info" "Proceeding with automatic installation..."
     fi
 }
 
 preinstallmsg() {
     echo ""
-    whiptail --title "HARDN-XDR" --msgbox "Welcome to HARDN-XDR. A Linux Security Hardening program." 10 60
+    if [ "$NON_INTERACTIVE_MODE" = false ]; then
+        whiptail --title "HARDN-XDR" --msgbox "Welcome to HARDN-XDR. A Linux Security Hardening program." 10 60
+    fi
     echo "The system will be configured to ensure STIG and Security compliance."
    
 }
@@ -1355,7 +1364,7 @@ disable_binfmt_misc() {
             HARDN_STATUS "info" "Modprobe rule to disable binfmt_misc already exists in $modprobe_conf."
         fi
     fi
-    whiptail --infobox "Non-native binary format support (binfmt_misc) checked/disabled." 7 70
+    whiptail_infobox "Non-native binary format support (binfmt_misc) checked/disabled."
 }
 
 disable_firewire_drivers() {
@@ -1395,9 +1404,9 @@ disable_firewire_drivers() {
     done
 
     if [[ "$changed" -eq 1 ]]; then
-        whiptail --infobox "FireWire drivers checked. Unloaded and/or blacklisted where applicable." 7 70
+        whiptail_infobox "FireWire drivers checked. Unloaded and/or blacklisted where applicable."
     else
-        whiptail --infobox "FireWire drivers checked. No changes made (likely already disabled/not present)." 8 70
+        whiptail_infobox "FireWire drivers checked. No changes made (likely already disabled/not present)."
     fi
     
 }
@@ -1411,8 +1420,10 @@ purge_old_packages() {
         HARDN_STATUS "info" "Found the following packages with leftover configuration files to purge:"
         echo "$packages_to_purge"
        
-        if command -v whiptail >/dev/null; then
+        if [ "$NON_INTERACTIVE_MODE" = false ] && command -v whiptail >/dev/null; then
             whiptail --title "Packages to Purge" --msgbox "The following packages have leftover configuration files that will be purged:\n\n$packages_to_purge" 15 70
+        elif [ "$NON_INTERACTIVE_MODE" = true ]; then
+            HARDN_STATUS "info" "Purging leftover configuration files for: $packages_to_purge"
         fi
 
         for pkg in $packages_to_purge; do
@@ -1428,16 +1439,16 @@ purge_old_packages() {
                 fi
             fi
         done
-        whiptail --infobox "Purged configuration files for removed packages." 7 70
+        whiptail_infobox "Purged configuration files for removed packages."
     else
         HARDN_STATUS "pass" "No old/removed packages with leftover configuration files found to purge."
-        whiptail --infobox "No leftover package configurations to purge." 7 70
+        whiptail_infobox "No leftover package configurations to purge."
     fi
    
     HARDN_STATUS "error" "Running apt-get autoremove and clean to free up space..."
     apt-get autoremove -y
     apt-get clean
-    whiptail --infobox "Apt cache cleaned." 7 70
+    whiptail_infobox "Apt cache cleaned."
 }
 
 # ENABLE NAME SERVERS FUNCTION: Let user decide DNS, but place recommendation. ADD TO /DOCS
@@ -1458,15 +1469,21 @@ enable_nameservers() {
 
     # A through selection of recommended Secured DNS provider
     local selected_provider
-    selected_provider=$(whiptail --title "DNS Provider Selection" --menu \
-        "Select a DNS provider for enhanced security and privacy:" 18 78 6 \
-        "Quad9" "DNSSEC, Malware Blocking, No Logging (Recommended)" \
-        "Cloudflare" "DNSSEC, Privacy-First, No Logging" \
-        "Google" "DNSSEC, Fast, Reliable (some logging)" \
-        "OpenDNS" "DNSSEC, Custom Filtering, Logging (opt-in)" \
-        "CleanBrowsing" "Family-safe, Malware Block, DNSSEC" \
-        "UncensoredDNS" "DNSSEC, No Logging, Europe-based, Privacy Focus" \
-        3>&1 1>&2 2>&3)
+    if [ "$NON_INTERACTIVE_MODE" = true ]; then
+        # Use Quad9 as default for non-interactive mode (recommended secure DNS)
+        selected_provider="Quad9"
+        HARDN_STATUS "info" "Non-interactive mode: Using Quad9 DNS (recommended secure option)"
+    else
+        selected_provider=$(whiptail --title "DNS Provider Selection" --menu \
+            "Select a DNS provider for enhanced security and privacy:" 18 78 6 \
+            "Quad9" "DNSSEC, Malware Blocking, No Logging (Recommended)" \
+            "Cloudflare" "DNSSEC, Privacy-First, No Logging" \
+            "Google" "DNSSEC, Fast, Reliable (some logging)" \
+            "OpenDNS" "DNSSEC, Custom Filtering, Logging (opt-in)" \
+            "CleanBrowsing" "Family-safe, Malware Block, DNSSEC" \
+            "UncensoredDNS" "DNSSEC, No Logging, Europe-based, Privacy Focus" \
+            3>&1 1>&2 2>&3)
+    fi
 
     # Exit if user cancels
     if [[ -z "$selected_provider" ]]; then
@@ -1602,11 +1619,20 @@ enable_nameservers() {
             changes_made=true
 
             # Make resolv.conf immutable to prevent overwriting
-            if whiptail --title "Protect DNS Configuration" --yesno "Would you like to make $resolv_conf immutable to prevent other services from changing it?\n\nNote: This may interfere with DHCP or VPN services." 10 78; then
+            if [ "$NON_INTERACTIVE_MODE" = true ]; then
+                # In non-interactive mode, make it immutable by default for security
                 if chattr +i "$resolv_conf" 2>/dev/null; then
-                    HARDN_STATUS "pass" "Made $resolv_conf immutable to prevent changes."
+                    HARDN_STATUS "pass" "Made $resolv_conf immutable to prevent changes (non-interactive default)."
                 else
-                    HARDN_STATUS "error" "Failed to make $resolv_conf immutable. Manual protection may be needed."
+                    HARDN_STATUS "warning" "Could not make $resolv_conf immutable. Manual protection may be needed."
+                fi
+            else
+                if whiptail --title "Protect DNS Configuration" --yesno "Would you like to make $resolv_conf immutable to prevent other services from changing it?\n\nNote: This may interfere with DHCP or VPN services." 10 78; then
+                    if chattr +i "$resolv_conf" 2>/dev/null; then
+                        HARDN_STATUS "pass" "Made $resolv_conf immutable to prevent changes."
+                    else
+                        HARDN_STATUS "error" "Failed to make $resolv_conf immutable. Manual protection may be needed."
+                    fi
                 fi
             fi
         else
@@ -1652,9 +1678,9 @@ EOF
     fi
 
     if [[ "$changes_made" = true ]]; then
-        whiptail --infobox "DNS configured: $selected_provider\nPrimary: $primary_dns\nSecondary: $secondary_dns" 8 70
+        whiptail_infobox "DNS configured: $selected_provider\nPrimary: $primary_dns\nSecondary: $secondary_dns"
     else
-        whiptail --infobox "DNS configuration checked. No changes made or needed." 8 70
+        whiptail_infobox "DNS configuration checked. No changes made or needed."
     fi
 
     # Test DNS resolution
@@ -1670,7 +1696,7 @@ enable_process_accounting_and_sysstat() {
         # Enable Process Accounting (acct/psacct)
         HARDN_STATUS "info" "Checking and installing acct (process accounting)..."
         if ! dpkg -s acct >/dev/null 2>&1 && ! dpkg -s psacct >/dev/null 2>&1; then
-            whiptail --infobox "Installing acct (process accounting)..." 7 60
+            whiptail_infobox "Installing acct (process accounting)..."
             if apt-get install -y acct; then
                 HARDN_STATUS "pass" "acct installed successfully."
                 changed_acct=true
@@ -1695,7 +1721,7 @@ enable_process_accounting_and_sysstat() {
         # Enable Sysstat
         HARDN_STATUS "info" "Checking and installing sysstat..."
         if ! dpkg -s sysstat >/dev/null 2>&1; then
-            whiptail --infobox "Installing sysstat..." 7 60
+            whiptail_infobox "Installing sysstat..."
             if apt-get install -y sysstat; then
                 HARDN_STATUS "pass" "sysstat installed successfully."
                 changed_sysstat=true
@@ -2175,7 +2201,7 @@ cleanup() {
     apt-get clean >/dev/null 2>&1
     apt-get autoclean >/dev/null 2>&1
     HARDN_STATUS "pass" "System cleanup completed. Unused packages and cache cleared."
-    whiptail --infobox "HARDN-XDR v${HARDN_VERSION} setup complete! Please reboot your system." 8 75
+    whiptail_infobox "HARDN-XDR v${HARDN_VERSION} setup complete! Please reboot your system."
     sleep 3
 
 }
@@ -2208,6 +2234,16 @@ main() {
 
 # Global variables for modes
 NON_INTERACTIVE_MODE=false
+
+# Wrapper function for whiptail that works in non-interactive mode
+whiptail_infobox() {
+    local message="$1"
+    if [ "$NON_INTERACTIVE_MODE" = false ]; then
+        whiptail_infobox "$message"
+    else
+        HARDN_STATUS "info" "$message"
+    fi
+}
 
 # Command line argument handling
 if [[ $# -gt 0 ]]; then
