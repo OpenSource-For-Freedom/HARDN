@@ -56,11 +56,58 @@ echo "Post-HARDN Score: ${POST_SCORE}%"
 echo "Improvement: ${IMPROVEMENT}%"
 echo ""
 
+# Generate remediation report regardless of pass/fail
+echo ""
+echo "=== GENERATING REMEDIATION REPORT ==="
+echo "Creating comprehensive remediation guidance..."
+
+# Ensure report directories exist
+mkdir -p /var/log/hardn-reports /var/log/lynis
+
+# Copy the Lynis report to expected location for report generator
+if [ -f /tmp/post-hardn.dat ]; then
+    cp /tmp/post-hardn.dat /var/log/lynis/hardn-report.dat
+fi
+
+# Run remediation report generator if available
+if [ -f /hardn/src/setup/generate-remediation-report.sh ]; then
+    echo "Running remediation report generator..."
+    bash /hardn/src/setup/generate-remediation-report.sh
+    if [ $? -eq 0 ]; then
+        echo "✅ Remediation report generated successfully"
+        echo "📁 Check /var/log/hardn-reports/ for detailed reports"
+        
+        # Show latest report files
+        echo ""
+        echo "=== GENERATED REPORTS ==="
+        ls -la /var/log/hardn-reports/ 2>/dev/null || echo "No reports directory found"
+        
+        # Show a snippet of the latest remediation report
+        LATEST_REPORT=$(ls -t /var/log/hardn-reports/remediation_report_*.md 2>/dev/null | head -1)
+        if [ -f "$LATEST_REPORT" ]; then
+            echo ""
+            echo "=== REMEDIATION REPORT PREVIEW ==="
+            head -30 "$LATEST_REPORT"
+            echo ""
+            echo "... (see full report at $LATEST_REPORT)"
+        fi
+    else
+        echo "⚠️  Remediation report generation encountered issues"
+    fi
+else
+    echo "⚠️  Remediation report generator not found"
+fi
+
+echo ""
+
 # Check compliance
 if [ "$POST_SCORE" -ge 90 ]; then
     echo "✅ PASS: Lynis compliance score is ${POST_SCORE}% (>= 90%)"
     echo "🎯 HARDN successfully achieved full Lynis compliance!"
     echo "📈 Score improved by ${IMPROVEMENT} percentage points"
+    echo ""
+    echo "🎉 SUCCESS: Full compliance achieved!"
+    echo "📊 Detailed reports available for ongoing maintenance and optimization"
     exit 0
 else
     echo "⚠️  PARTIAL: Lynis compliance score is ${POST_SCORE}% (< 90%)"
@@ -72,13 +119,10 @@ else
         echo "🔍 Investigation needed for HARDN effectiveness"
     fi
     
-    # Show some suggestions from Lynis
     echo ""
-    echo "=== TOP LYNIS SUGGESTIONS ==="
-    if [ -f /tmp/post-hardn.dat ]; then
-        echo "Sample suggestions from Lynis report:"
-        grep "suggestion\[\]" /tmp/post-hardn.dat | head -5 | sed 's/suggestion\[\]=/- /'
-    fi
+    echo "📋 REMEDIATION REQUIRED: Check the generated reports for specific guidance"
+    echo "🎯 Target: $((90 - POST_SCORE)) additional points needed to reach 90%"
+    echo "📁 Detailed remediation steps available in /var/log/hardn-reports/"
     
     exit 1
 fi

@@ -78,6 +78,37 @@ echo "Post-Test Score: ${POST_SCORE}%"
 echo "Improvement: ${IMPROVEMENT}%"
 echo ""
 
+# Generate quick remediation guidance
+echo ""
+echo "=== GENERATING QUICK REMEDIATION GUIDANCE ==="
+
+# Ensure report directories exist
+mkdir -p /var/log/hardn-reports /var/log/lynis
+
+# Copy the Lynis report for analysis
+if [ -f /tmp/post-test.dat ]; then
+    cp /tmp/post-test.dat /var/log/lynis/hardn-report.dat
+fi
+
+# Generate quick remediation report if available
+if [ -f /hardn/src/setup/generate-remediation-report.sh ]; then
+    echo "Generating quick remediation guidance..."
+    bash /hardn/src/setup/generate-remediation-report.sh
+    if [ $? -eq 0 ]; then
+        echo "✅ Quick remediation guidance generated"
+        
+        # Show some key recommendations
+        LATEST_REPORT=$(ls -t /var/log/hardn-reports/remediation_report_*.md 2>/dev/null | head -1)
+        if [ -f "$LATEST_REPORT" ]; then
+            echo ""
+            echo "=== KEY RECOMMENDATIONS ==="
+            grep -A 10 "## Prioritized Remediation Steps" "$LATEST_REPORT" | head -15
+        fi
+    fi
+fi
+
+echo ""
+
 # Check for any improvement
 if [ "$IMPROVEMENT" -gt 0 ]; then
     echo "✅ SUCCESS: HARDN improved Lynis score by ${IMPROVEMENT} percentage points"
@@ -90,9 +121,14 @@ if [ "$IMPROVEMENT" -gt 0 ]; then
     else
         echo "🔧 NOTE: Full HARDN installation should achieve higher scores"
     fi
+    
+    echo ""
+    echo "📋 For detailed remediation guidance, see: /var/log/hardn-reports/"
     exit 0
 else
     echo "⚠️  LIMITED: Score improvement was minimal in this quick test"
     echo "🔍 Full HARDN installation with all components should show greater improvement"
+    echo ""
+    echo "📋 For detailed remediation guidance, see: /var/log/hardn-reports/"
     exit 1
 fi

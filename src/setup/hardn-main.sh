@@ -2157,6 +2157,20 @@ pen_test() {
         HARDN_STATUS "warning" "Lynis report file not found. Check /var/log/lynis/ for details."
     fi
     
+    # Generate comprehensive remediation report
+    HARDN_STATUS "info" "Generating comprehensive remediation report..."
+    if [[ -f "${SCRIPT_DIR}/generate-remediation-report.sh" ]]; then
+        bash "${SCRIPT_DIR}/generate-remediation-report.sh"
+        if [[ $? -eq 0 ]]; then
+            HARDN_STATUS "pass" "Remediation report generated successfully"
+            HARDN_STATUS "info" "Check /var/log/hardn-reports/ for detailed remediation guidance"
+        else
+            HARDN_STATUS "warning" "Remediation report generation encountered issues"
+        fi
+    else
+        HARDN_STATUS "warning" "Remediation report generator not found. Skipping detailed reporting."
+    fi
+    
     # Run nmap scan for network security assessment
     HARDN_STATUS "info" "Starting network security assessment with nmap..."
     
