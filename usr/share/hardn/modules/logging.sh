@@ -196,7 +196,7 @@ show_progress() {
     local filled=$((current * width / total))
     local empty=$((width - filled))
     
-    printf "\r${description}: ["
+    printf "\r%s: [" "${description}"
     printf "%${filled}s" | tr ' ' '█'
     printf "%${empty}s" | tr ' ' '░'
     printf "] %d%% (%d/%d)" "${percentage}" "${current}" "${total}"

@@ -85,7 +85,7 @@ install_security_packages() {
         ((current_package++))
         
         if ! is_non_interactive; then
-            show_progress ${current_package} ${total_packages} "Installing packages"
+            show_progress "${current_package}" "${total_packages}" "Installing packages"
         fi
         
         log_debug "Processing package ${current_package}/${total_packages}: ${name}"
