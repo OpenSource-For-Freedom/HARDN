@@ -12,21 +12,21 @@
 
 HARDN-XDR has been completely refactored into a **commercial-ready Debian application** with:
 
-- ✅ **Modular Architecture** - Clean separation of concerns with dedicated modules
-- ✅ **Professional CLI** - Full-featured command-line interface with proper argument parsing
-- ✅ **Debian Packaging** - Native `.deb` package with proper dependencies and post-install scripts
-- ✅ **FHS Compliance** - Follows Filesystem Hierarchy Standard and LSB guidelines
-- ✅ **Systemd Integration** - Native service files with security restrictions
-- ✅ **Comprehensive Logging** - Structured logging with multiple levels and file rotation
-- ✅ **Backup/Restore** - Automated configuration backup and restore functionality
-- ✅ **CI/CD Pipeline** - Automated testing, building, and packaging with GitHub Actions
-- ✅ **Security Hardening** - Enhanced STIG compliance implementation targeting 99% Lynis score
+- **Modular Architecture** - Clean separation of concerns with dedicated modules
+- **Professional CLI** - Full-featured command-line interface with proper argument parsing
+- **Debian Packaging** - Native `.deb` package with proper dependencies and post-install scripts
+- **FHS Compliance** - Follows Filesystem Hierarchy Standard and LSB guidelines
+- **Systemd Integration** - Native service files with security restrictions
+- **Comprehensive Logging** - Structured logging with multiple levels and file rotation
+- **Backup/Restore** - Automated configuration backup and restore functionality
+- **CI/CD Pipeline** - Automated testing, building, and packaging with GitHub Actions
+- **Security Hardening** - Enhanced STIG compliance implementation targeting 99% Lynis score
 
-## 📋 Overview
+## Overview
 
 HARDN-XDR is a comprehensive security hardening solution designed to transform Debian-based systems into highly secure **"Golden Image"** configurations. It implements multiple layers of defense following industry best practices and government security standards.
 
-### 🎯 Key Features
+### Key Features
 
 - **STIG Compliance** - Security Technical Implementation Guide standards
 - **Multi-Layer Defense** - Comprehensive security controls across all system layers
@@ -35,7 +35,7 @@ HARDN-XDR is a comprehensive security hardening solution designed to transform D
 - **Compliance Auditing** - Automated security assessments with detailed reporting
 - **Air-Gap Ready** - Designed for offline and air-gapped environments
 
-### 🛡️ Security Components
+### Security Components
 
 | Component | Tools | Purpose |
 |-----------|-------|---------|
@@ -79,7 +79,7 @@ dpkg-buildpackage -us -uc -b
 sudo dpkg -i ../hardn-xdr_*.deb
 ```
 
-## 📖 Usage
+## Usage
 
 ### Basic Commands
 
@@ -168,7 +168,7 @@ HARDN-XDR v2.0.0 features a completely modular architecture:
 | **update.sh** | Security updates, signature updates, maintenance |
 | **uninstall.sh** | Clean removal, system restoration |
 
-## 🔧 Configuration
+## Configuration
 
 ### Main Configuration File
 
@@ -208,7 +208,7 @@ export LOG_LEVEL="debug"
 export DRY_RUN="true"
 ```
 
-## 📊 Security Compliance
+## Security Compliance
 
 HARDN-XDR targets the highest security standards:
 
@@ -220,15 +220,15 @@ HARDN-XDR targets the highest security standards:
 
 ### Compliance Features
 
-- ✅ Kernel parameter hardening (50+ security settings)
-- ✅ Network security configuration
-- ✅ File system security and encryption readiness
-- ✅ User account and authentication hardening
-- ✅ System service minimization
-- ✅ Audit trail configuration
-- ✅ Intrusion detection and prevention
-- ✅ Malware protection and scanning
-- ✅ System integrity monitoring
+- Kernel parameter hardening (50+ security settings)
+- Network security configuration
+- File system security and encryption readiness
+- User account and authentication hardening
+- System service minimization
+- Audit trail configuration
+- Intrusion detection and prevention
+- Malware protection and scanning
+- System integrity monitoring
 
 ## 🔄 Development & CI/CD
 
@@ -274,7 +274,7 @@ dpkg-buildpackage -us -uc -b
 sudo dpkg -i ../hardn-xdr_*.deb
 ```
 
-## 📋 System Requirements
+## System Requirements
 
 ### Minimum Requirements
 
@@ -294,17 +294,17 @@ sudo dpkg -i ../hardn-xdr_*.deb
 
 ### Before Installation
 
-- ⚠️ **Test in non-production environment first**
-- ⚠️ **Create full system backup**
-- ⚠️ **Review security policies and compliance requirements**
-- ⚠️ **Ensure administrative access availability**
+- **Test in non-production environment first**
+- **Create full system backup**
+- **Review security policies and compliance requirements**
+- **Ensure administrative access availability**
 
 ### After Installation
 
-- 🔍 **Review audit logs regularly**
+- **Review audit logs regularly**
 - 🔄 **Keep security signatures updated**
-- 📊 **Monitor compliance scores**
-- 🔧 **Adjust configuration as needed**
+- **Monitor compliance scores**
+- **Adjust configuration as needed**
 
 ## 📄 Documentation
 

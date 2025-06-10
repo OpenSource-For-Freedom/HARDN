@@ -19,16 +19,16 @@ get_service_status() {
     local service="$1"
     
     if ! service_exists "${service}"; then
-        echo "❌ Not installed"
+        echo "ERROR Not installed"
         return 1
     elif is_service_active "${service}"; then
-        echo "✅ Running"
+        echo "OK Running"
         return 0
     elif is_service_enabled "${service}"; then
-        echo "⚠️  Enabled but not running"
+        echo "WARNING Enabled but not running"
         return 2
     else
-        echo "❌ Disabled"
+        echo "ERROR Disabled"
         return 1
     fi
 }
@@ -92,18 +92,18 @@ show_hardening_status() {
     log_separator "-" 40
     
     if is_hardn_configured; then
-        echo "✅ HARDN-XDR is installed and configured"
+        echo "OK HARDN-XDR is installed and configured"
         if [[ -f /etc/hardn/hardn.conf ]]; then
-            echo "✅ Configuration file present"
+            echo "OK Configuration file present"
         fi
         if [[ -d /var/log/hardn ]]; then
-            echo "✅ Log directory present"
+            echo "OK Log directory present"
             local log_count
             log_count=$(find /var/log/hardn -name "*.log" 2>/dev/null | wc -l)
             echo "   Log files: ${log_count}"
         fi
     else
-        echo "❌ HARDN-XDR not fully configured"
+        echo "ERROR HARDN-XDR not fully configured"
         echo "   Run 'hardn setup' to configure the system"
     fi
     echo
@@ -145,12 +145,12 @@ show_hardening_status() {
         echo "UFW Status: ${ufw_status}"
         
         if [[ "${ufw_status}" == *"active"* ]]; then
-            echo "✅ Firewall is active and protecting the system"
+            echo "OK Firewall is active and protecting the system"
         else
-            echo "❌ Firewall is not active"
+            echo "ERROR Firewall is not active"
         fi
     else
-        echo "❌ UFW not installed"
+        echo "ERROR UFW not installed"
     fi
     echo
     
@@ -252,10 +252,10 @@ show_hardening_status() {
     fi
     
     if [[ ${#recommendations[@]} -eq 0 ]]; then
-        echo "✅ No immediate security recommendations"
+        echo "OK No immediate security recommendations"
     else
         for recommendation in "${recommendations[@]}"; do
-            echo "⚠️  ${recommendation}"
+            echo "WARNING ${recommendation}"
         done
     fi
     
@@ -274,7 +274,7 @@ show_monitoring_status() {
         status=$(get_service_status "hardn-monitor")
         echo "HARDN Monitor Service: ${status}"
     else
-        echo "❌ HARDN Monitor Service: Not installed"
+        echo "ERROR HARDN Monitor Service: Not installed"
     fi
     
     # Check log files
@@ -300,9 +300,9 @@ show_monitoring_status() {
             local last_modified
             size=$(du -h "${log_file}" 2>/dev/null | cut -f1)
             last_modified=$(stat -c "%y" "${log_file}" 2>/dev/null | cut -d. -f1)
-            printf "%-20s %-15s %s (last: %s)\n" "${description}" "✅ Present" "${size}" "${last_modified}"
+            printf "%-20s %-15s %s (last: %s)\n" "${description}" "OK Present" "${size}" "${last_modified}"
         else
-            printf "%-20s %-15s\n" "${description}" "❌ Missing"
+            printf "%-20s %-15s\n" "${description}" "ERROR Missing"
         fi
     done
     

@@ -94,7 +94,7 @@
 
 ```bash
 HARDN-XDR/
-├── changelog.md                 # Documents version history and changes
+├── docs/changelog.md             # Documents version history and changes
 ├── docs                         # Documentation directory
 │   ├── assets                   # Images and visual resources
 │   │   ├── cybersynapse.png     # Partner logo
