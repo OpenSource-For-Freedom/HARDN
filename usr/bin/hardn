@@ -107,7 +107,10 @@ check_system() {
             fi
         elif [[ "${ID:-}" == "ubuntu" ]]; then
             debian_version="${VERSION_ID:-}"
-            if [[ "${debian_version}" < "24.04" ]]; then
+            # Extract major and minor version numbers for comparison
+            ubuntu_major=$(echo "${debian_version}" | cut -d. -f1)
+            ubuntu_minor=$(echo "${debian_version}" | cut -d. -f2)
+            if (( ubuntu_major < 24 || (ubuntu_major == 24 && ubuntu_minor < 4) )); then
                 log_error "Ubuntu version ${debian_version} is not supported. Requires Ubuntu 24.04+."
                 exit 1
             fi
