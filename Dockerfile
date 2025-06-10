@@ -16,7 +16,8 @@ RUN apt-get update && \
         ca-certificates \
         gnupg \
         lsb-release \
-        procps && \
+        procps \
+        whiptail && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
