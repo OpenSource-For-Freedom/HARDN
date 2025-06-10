@@ -109,6 +109,27 @@ jobs:
         echo "=== HARDENING INDEX ==="
         docker exec hardn-container bash -c "if [ -f /tmp/lynis-detailed-report.dat ]; then grep 'hardening_index' /tmp/lynis-detailed-report.dat; fi"
         
+        # Generate remediation report
+        echo "=== GENERATING REMEDIATION REPORT ==="
+        docker exec hardn-container bash -c "mkdir -p /var/log/hardn-reports /var/log/lynis"
+        docker exec hardn-container bash -c "if [ -f /tmp/lynis-detailed-report.dat ]; then cp /tmp/lynis-detailed-report.dat /var/log/lynis/hardn-report.dat; fi"
+        docker exec hardn-container bash -c "cd /hardn && ./src/setup/generate-remediation-report.sh"
+        
+        # Create artifacts directory
+        mkdir -p ./artifacts
+        
+        # Copy reports from container to host
+        docker cp hardn-container:/var/log/hardn-reports/ ./artifacts/ || echo "No reports directory found"
+        docker cp hardn-container:/tmp/lynis-detailed-report.dat ./artifacts/lynis-detailed-report.dat || echo "No detailed report found"
+        docker cp hardn-container:/tmp/lynis-detailed.log ./artifacts/lynis-detailed.log || echo "No detailed log found"
+        
         # Cleanup
         docker stop hardn-container
         docker rm hardn-container
+        
+    - name: Upload report artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: hardn-lynis-reports
+        path: ./artifacts/
+        retention-days: 30
