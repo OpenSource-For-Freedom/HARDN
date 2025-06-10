@@ -1,0 +1,45 @@
+[Unit]
+Description=HARDN-XDR Security Monitor
+Documentation=https://github.com/OpenSource-For-Freedom/HARDN
+After=network.target auditd.service rsyslog.service
+Wants=auditd.service rsyslog.service
+
+[Service]
+Type=forking
+User=hardn
+Group=hardn
+ExecStart=/usr/bin/hardn monitor start
+ExecStop=/usr/bin/hardn monitor stop
+ExecReload=/usr/bin/hardn monitor restart
+Restart=on-failure
+RestartSec=30
+TimeoutStartSec=300
+TimeoutStopSec=30
+
+# Security settings
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+RemoveIPC=true
+RestrictNamespaces=true
+
+# Capabilities
+CapabilityBoundingSet=CAP_DAC_READ_SEARCH CAP_SETUID CAP_SETGID
+AmbientCapabilities=CAP_DAC_READ_SEARCH
+
+# File system access
+ReadWritePaths=/var/log/hardn /var/lib/hardn
+ReadOnlyPaths=/etc/hardn /usr/share/hardn
+
+# Network restrictions
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

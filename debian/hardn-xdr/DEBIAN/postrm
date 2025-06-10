@@ -1,0 +1,59 @@
+#!/bin/bash
+
+set -e
+
+case "$1" in
+    remove|purge)
+        # Stop and disable services
+        systemctl stop hardn-monitor.service 2>/dev/null || true
+        systemctl disable hardn-monitor.service 2>/dev/null || true
+        
+        if [ "$1" = "purge" ]; then
+            # Remove configuration files
+            rm -rf /etc/hardn
+            
+            # Remove log files
+            rm -rf /var/log/hardn
+            
+            # Remove user data (but preserve backups)
+            if [ -d /var/lib/hardn ]; then
+                echo "Preserving backup directory at /var/lib/hardn/backups"
+                find /var/lib/hardn -type f ! -path "*/backups/*" -delete 2>/dev/null || true
+            fi
+            
+            # Remove hardn user
+            if getent passwd hardn >/dev/null; then
+                deluser --system hardn 2>/dev/null || true
+            fi
+            
+            echo "HARDN-XDR has been completely removed."
+        else
+            echo "HARDN-XDR has been removed but configuration preserved."
+            echo "Use 'apt purge hardn-xdr' to remove all configuration."
+        fi
+        ;;
+    
+    upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+        ;;
+    
+    *)
+        echo "postrm called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+# Automatically added by dh_installsystemd/13.14.1ubuntu5
+if [ "$1" = remove ] && [ -d /run/systemd/system ] ; then
+	systemctl --system daemon-reload >/dev/null || true
+fi
+# End automatically added section
+# Automatically added by dh_installsystemd/13.14.1ubuntu5
+if [ "$1" = "purge" ]; then
+	if [ -x "/usr/bin/deb-systemd-helper" ]; then
+		deb-systemd-helper purge 'hardn-monitor.service' >/dev/null || true
+	fi
+fi
+# End automatically added section
+
+
+exit 0
