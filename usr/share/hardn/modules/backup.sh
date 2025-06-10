@@ -36,7 +36,8 @@ create_system_backup() {
     
     for config_file in "${config_files[@]}"; do
         if [[ -f "${config_file}" ]]; then
-            local backup_path="${backup_dir}$(dirname "${config_file}")"
+            local backup_path
+            backup_path="${backup_dir}$(dirname "${config_file}")"
             mkdir -p "${backup_path}"
             cp "${config_file}" "${backup_path}/"
             log_debug "Backed up ${config_file}"
@@ -93,7 +94,7 @@ restore_system_backup() {
     
     # Restore configuration files
     find "${backup_dir}" -type f \( -name "*.conf" -o -name "*.rules" \) | while read -r backup_file; do
-        local relative_path="${backup_file#${backup_dir}}"
+        local relative_path="${backup_file#"${backup_dir}"}"
         local target_file="${relative_path}"
         
         if [[ -f "${target_file}" ]]; then
@@ -126,7 +127,8 @@ list_backups() {
     
     for backup_dir in "${backup_base_dir}"/*; do
         if [[ -d "${backup_dir}" ]]; then
-            local backup_name=$(basename "${backup_dir}")
+            local backup_name
+            backup_name=$(basename "${backup_dir}")
             local backup_date="Unknown"
             local file_count=0
             
@@ -168,15 +170,23 @@ clean_old_backups() {
     fi
     
     local removed_count=0
+    local temp_count_file="/tmp/backup_count_$$"
+    echo "0" > "${temp_count_file}"
     
     find "${backup_base_dir}" -type d -name "*" -mtime "+${days}" 2>/dev/null | while read -r old_backup; do
         if [[ "${old_backup}" != "${backup_base_dir}" ]]; then
-            local backup_name=$(basename "${old_backup}")
+            local backup_name
+            backup_name=$(basename "${old_backup}")
             log_info "Removing old backup: ${backup_name}"
             rm -rf "${old_backup}"
-            ((removed_count++))
+            local count
+            count=$(cat "${temp_count_file}")
+            echo $((count + 1)) > "${temp_count_file}"
         fi
     done
+    
+    removed_count=$(cat "${temp_count_file}")
+    rm -f "${temp_count_file}"
     
     hardn_status "pass" "Cleaned ${removed_count} old backups"
 }

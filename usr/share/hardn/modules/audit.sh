@@ -66,12 +66,12 @@ run_lynis_audit() {
             
             # Show suggestions count
             local suggestions_count
-            suggestions_count=$(grep "^suggestion\[" "${report_file}" | wc -l)
+            suggestions_count=$(grep -c "^suggestion\[" "${report_file}")
             log_info "Security suggestions: ${suggestions_count}"
             
             # Show warnings count
             local warnings_count
-            warnings_count=$(grep "^warning\[" "${report_file}" | wc -l)
+            warnings_count=$(grep -c "^warning\[" "${report_file}")
             log_info "Security warnings: ${warnings_count}"
         fi
         
@@ -120,7 +120,7 @@ run_network_scan() {
         
         # Extract open ports
         local open_ports
-        open_ports=$(grep "^[0-9]" "${scan_log}" | grep -v "closed" | wc -l)
+        open_ports=$(grep "^[0-9]" "${scan_log}" | grep -vc "closed")
         log_info "Open ports detected: ${open_ports}"
         
         # Show critical open ports
@@ -281,9 +281,9 @@ check_malware() {
     # Scan critical directories
     local scan_dirs="/bin /sbin /usr/bin /usr/sbin /etc /home"
     
-    if clamscan --recursive --infected --log="${malware_log}" ${scan_dirs} >/dev/null 2>&1; then
+    if clamscan --recursive --infected --log="${malware_log}" "${scan_dirs}" >/dev/null 2>&1; then
         local infected_files
-        infected_files=$(grep "FOUND" "${malware_log}" | wc -l)
+        infected_files=$(grep -c "FOUND" "${malware_log}")
         
         if [[ ${infected_files} -gt 0 ]]; then
             hardn_status "warning" "Malware detected: ${infected_files} infected files"
@@ -328,50 +328,62 @@ EOF
     fi
     
     # Add system information
-    echo "System Information:" >> "${report_file}"
-    echo "==================" >> "${report_file}"
-    echo "Hostname: $(hostname)" >> "${report_file}"
-    echo "Uptime: $(uptime)" >> "${report_file}"
-    echo "Memory: $(free -h | grep Mem)" >> "${report_file}"
-    echo "Disk: $(df -h / | tail -1)" >> "${report_file}"
-    echo "" >> "${report_file}"
+    {
+        echo "System Information:"
+        echo "=================="
+        echo "Hostname: $(hostname)"
+        echo "Uptime: $(uptime)"
+        echo "Memory: $(free -h | grep Mem)"
+        echo "Disk: $(df -h / | tail -1)"
+        echo ""
+    } >> "${report_file}"
     
     # Add service status
-    echo "Security Services Status:" >> "${report_file}"
-    echo "========================" >> "${report_file}"
+    {
+        echo "Security Services Status:"
+        echo "========================"
+    } >> "${report_file}"
     
-    local services=("ufw" "fail2ban" "auditd" "apparmor" "clamav-daemon" "rkhunter")
-    for service in "${services[@]}"; do
-        if service_exists "${service}"; then
-            local status="stopped"
-            if is_service_active "${service}"; then
-                status="running"
+    {
+        local services=("ufw" "fail2ban" "auditd" "apparmor" "clamav-daemon" "rkhunter")
+        for service in "${services[@]}"; do
+            if service_exists "${service}"; then
+                local status="stopped"
+                if is_service_active "${service}"; then
+                    status="running"
+                fi
+                echo "${service}: ${status}"
+            else
+                echo "${service}: not installed"
             fi
-            echo "${service}: ${status}" >> "${report_file}"
-        else
-            echo "${service}: not installed" >> "${report_file}"
-        fi
-    done
-    echo "" >> "${report_file}"
+        done
+        echo ""
+    } >> "${report_file}"
     
     # Add recent log entries
-    echo "Recent Security Events:" >> "${report_file}"
-    echo "======================" >> "${report_file}"
+    {
+        echo "Recent Security Events:"
+        echo "======================"
+    } >> "${report_file}"
     if [[ -f /var/log/auth.log ]]; then
-        echo "Authentication attempts (last 10):" >> "${report_file}"
-        tail -10 /var/log/auth.log >> "${report_file}"
-        echo "" >> "${report_file}"
+        {
+            echo "Authentication attempts (last 10):"
+            tail -10 /var/log/auth.log
+            echo ""
+        } >> "${report_file}"
     fi
     
     # Add recommendations
-    echo "Security Recommendations:" >> "${report_file}"
-    echo "=========================" >> "${report_file}"
-    echo "1. Regularly update system packages" >> "${report_file}"
-    echo "2. Review security logs weekly" >> "${report_file}"
-    echo "3. Run security audits monthly" >> "${report_file}"
-    echo "4. Keep security tools updated" >> "${report_file}"
-    echo "5. Monitor system integrity changes" >> "${report_file}"
-    echo "" >> "${report_file}"
+    {
+        echo "Security Recommendations:"
+        echo "========================="
+        echo "1. Regularly update system packages"
+        echo "2. Review security logs weekly"
+        echo "3. Run security audits monthly"
+        echo "4. Keep security tools updated"
+        echo "5. Monitor system integrity changes"
+        echo ""
+    } >> "${report_file}"
     
     log_info "Security report generated: ${report_file}"
     hardn_status "pass" "Security audit report completed"

@@ -155,7 +155,8 @@ test_intrusion_prevention() {
             echo "✅ Fail2ban service is active"
             
             # Check SSH jail
-            local ssh_jail=$(fail2ban-client status sshd 2>/dev/null | grep "Status for the jail: sshd" || echo "not found")
+            local ssh_jail
+            ssh_jail=$(fail2ban-client status sshd 2>/dev/null | grep "Status for the jail: sshd" || echo "not found")
             if [[ "${ssh_jail}" != "not found" ]]; then
                 echo "✅ Fail2ban SSH jail configured"
             else
@@ -206,7 +207,8 @@ test_apparmor() {
         echo "✅ AppArmor installed"
         
         # Check AppArmor status
-        local aa_status=$(aa-status --enabled 2>/dev/null && echo "enabled" || echo "disabled")
+        local aa_status
+        aa_status=$(aa-status --enabled 2>/dev/null && echo "enabled" || echo "disabled")
         if [ "${aa_status}" = "enabled" ]; then
             echo "✅ AppArmor is enabled"
         else
@@ -242,7 +244,8 @@ test_stig_compliance() {
     # Test login security
     echo "Testing login security..."
     if [ -f "/etc/login.defs" ]; then
-        local max_days=$(grep "^PASS_MAX_DAYS" /etc/login.defs 2>/dev/null | awk '{print $2}')
+        local max_days
+        max_days=$(grep "^PASS_MAX_DAYS" /etc/login.defs 2>/dev/null | awk '{print $2}')
         if [ -n "${max_days}" ] && [ "${max_days}" -le 90 ]; then
             echo "✅ Password maximum age configured: ${max_days} days"
         else
@@ -290,7 +293,8 @@ test_lynis_compliance() {
         echo "✅ Lynis audit completed"
         
         # Extract hardening index
-        local hardening_index=$(grep 'hardening_index' /tmp/compliance-test/lynis.dat | cut -d'=' -f2 | tr -d ' ' 2>/dev/null || echo '0')
+        local hardening_index
+        hardening_index=$(grep 'hardening_index' /tmp/compliance-test/lynis.dat | cut -d'=' -f2 | tr -d ' ' 2>/dev/null || echo '0')
         echo "Hardening Index: ${hardening_index}%"
         
         if [ "${hardening_index}" -ge 80 ]; then

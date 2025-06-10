@@ -45,7 +45,8 @@ detect_environment() {
     
     # Check for virtual environment indicators
     if [ -f /sys/class/dmi/id/product_name ]; then
-        local product_name=$(cat /sys/class/dmi/id/product_name 2>/dev/null || echo "")
+        local product_name
+        product_name=$(cat /sys/class/dmi/id/product_name 2>/dev/null || echo "")
         case "$product_name" in
             *VirtualBox*|*VMware*|*QEMU*|*KVM*|*Hyper-V*)
                 env_type="Virtual Machine"
@@ -339,13 +340,11 @@ create_remediation_report() {
 EOF
 
     # Add environment-specific recommendations
-    generate_env_recommendations "$environment" "$current_score" >> "$REMEDIATION_REPORT"
-    
-    # Add remediation steps
-    generate_remediation_steps "$current_score" >> "$REMEDIATION_REPORT"
-    
-    # Add command examples
-    generate_command_examples >> "$REMEDIATION_REPORT"
+    {
+        generate_env_recommendations "$environment" "$current_score"
+        generate_remediation_steps "$current_score"
+        generate_command_examples
+    } >> "$REMEDIATION_REPORT"
     
     # Add raw Lynis data section
     cat >> "$REMEDIATION_REPORT" << EOF
