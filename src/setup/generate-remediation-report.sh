@@ -13,6 +13,8 @@ LYNIS_LOG="${LYNIS_LOG:-/var/log/lynis/hardn-audit.log}"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 REMEDIATION_REPORT="$REPORT_DIR/remediation_report_$TIMESTAMP.md"
 ISSUE_EXPORT="$REPORT_DIR/github_issue_$TIMESTAMP.json"
+SCORE_EXPORT="$REPORT_DIR/lynis-score.txt"
+SCORE_JSON_EXPORT="$REPORT_DIR/lynis-score.json"
 
 # Status function
 HARDN_STATUS() {
@@ -444,6 +446,34 @@ EOF
 EOF
 }
 
+# Export Lynis score as standalone artifacts for GitHub Actions
+export_lynis_score_artifacts() {
+    local current_score="$1"
+    local environment="$2"
+    local status="$3"
+    
+    # Create report directory if it doesn't exist
+    mkdir -p "$REPORT_DIR"
+    
+    # Export simple text file with just the score
+    echo "$current_score" > "$SCORE_EXPORT"
+    HARDN_STATUS "info" "Exported Lynis score to: $SCORE_EXPORT"
+    
+    # Export JSON format with additional metadata
+    cat > "$SCORE_JSON_EXPORT" << EOF
+{
+  "lynis_score": $current_score,
+  "status": "$status",
+  "environment": "$environment",
+  "compliance_threshold": 90,
+  "compliance_met": $([ "$current_score" -ge 90 ] && echo "true" || echo "false"),
+  "timestamp": "$(date -Iseconds)",
+  "hardn_version": "2.0.0"
+}
+EOF
+    HARDN_STATUS "info" "Exported Lynis score JSON to: $SCORE_JSON_EXPORT"
+}
+
 # Main function
 main() {
     HARDN_STATUS "info" "Starting HARDN-XDR Remediation Report Generation..."
@@ -475,12 +505,17 @@ main() {
     HARDN_STATUS "info" "Creating GitHub issue export..."
     create_github_issue "$current_score" "$environment" "$status"
     
+    HARDN_STATUS "info" "Exporting Lynis score artifacts..."
+    export_lynis_score_artifacts "$current_score" "$environment" "$status"
+    
     # Summary
     echo ""
     HARDN_STATUS "pass" "Remediation report generation complete!"
     echo "📊 Reports generated:"
     echo "   • Detailed Report: $REMEDIATION_REPORT"
     echo "   • GitHub Issue: $ISSUE_EXPORT"
+    echo "   • Score Artifact: $SCORE_EXPORT"
+    echo "   • Score JSON: $SCORE_JSON_EXPORT"
     echo "   • Environment: $environment"
     echo "   • Score: $current_score%"
     echo "   • Status: $status"
