@@ -13,7 +13,12 @@ echo "=== BASELINE LYNIS AUDIT ==="
 lynis audit system --quiet --no-colors --log-file /tmp/baseline.log --report-file /tmp/baseline.dat
 
 if [ -f /tmp/baseline.dat ]; then
-    BASELINE_SCORE=$(grep "hardening_index" /tmp/baseline.dat | cut -d"=" -f2 | tr -d " " || echo "0")
+    BASELINE_SCORE=$(grep "hardening_index" /tmp/baseline.dat | cut -d"=" -f2 | tr -d " " 2>/dev/null || echo "0")
+    # Validate that BASELINE_SCORE is numeric
+    if ! [[ "$BASELINE_SCORE" =~ ^[0-9]+$ ]]; then
+        echo "⚠️  Warning: Invalid baseline score format: '$BASELINE_SCORE', using 0"
+        BASELINE_SCORE=0
+    fi
     echo "Baseline Hardening Index: ${BASELINE_SCORE}%"
 else
     echo "⚠️  Warning: Could not determine baseline score"
@@ -61,7 +66,12 @@ echo "Running Lynis audit after HARDN components..."
 lynis audit system --quiet --no-colors --log-file /tmp/post-test.log --report-file /tmp/post-test.dat
 
 if [ -f /tmp/post-test.dat ]; then
-    POST_SCORE=$(grep "hardening_index" /tmp/post-test.dat | cut -d"=" -f2 | tr -d " " || echo "0")
+    POST_SCORE=$(grep "hardening_index" /tmp/post-test.dat | cut -d"=" -f2 | tr -d " " 2>/dev/null || echo "0")
+    # Validate that POST_SCORE is numeric
+    if ! [[ "$POST_SCORE" =~ ^[0-9]+$ ]]; then
+        echo "⚠️  Warning: Invalid post-test score format: '$POST_SCORE', using 0"
+        POST_SCORE=0
+    fi
     echo "Post-Test Hardening Index: ${POST_SCORE}%"
 else
     echo "❌ ERROR: Could not determine post-test score"
