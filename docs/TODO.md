@@ -2,7 +2,7 @@ Thanks for sharing your Lynis scan results. Based on your output, here's a break
 
 ---
 
-## ✅ GENERAL SYSTEM IMPROVEMENTS
+## GENERAL SYSTEM IMPROVEMENTS
 
 ### 1. **Install Missing Security-Related Packages**
 
@@ -109,7 +109,7 @@ NoNewPrivileges=true
 
 Repeat this process for other services reported as `UNSAFE`.
 
-✅ Alternatively: use a loop to apply a standard security profile to multiple services:
+Alternatively: use a loop to apply a standard security profile to multiple services:
 
 ```bash
 for svc in cron rsyslog cups getty@tty1 exim4 avahi-daemon colord lightdm dbus ntpsec; do
@@ -193,7 +193,7 @@ sudo systemctl enable --now auditd
 
 ---
 
-## ✅ Summary
+## Summary
 
 | Category         | Action                                             |
 | ---------------- | -------------------------------------------------- |

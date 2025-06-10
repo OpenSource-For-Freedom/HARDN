@@ -165,9 +165,9 @@ The GitHub Actions workflow automatically:
 ## Compliance Verification
 
 The implementation ensures:
-- ✅ Debian 12 system compatibility
-- ✅ Containerized testing environment
-- ✅ Automated Lynis compliance validation
-- ✅ 90%+ hardening index achievement
-- ✅ GitHub Actions integration
-- ✅ Comprehensive reporting and monitoring
+- Debian 12 system compatibility
+- Containerized testing environment
+- Automated Lynis compliance validation
+- 90%+ hardening index achievement
+- GitHub Actions integration
+- Comprehensive reporting and monitoring

@@ -384,7 +384,7 @@ create_github_issue() {
     
     local title
     if [ "$status" = "PASS" ]; then
-        title="✅ Lynis Compliance Achieved - Score: ${current_score}%"
+        title="OK Lynis Compliance Achieved - Score: ${current_score}%"
     else
         title="⚠️ Lynis Remediation Required - Score: ${current_score}%"
     fi
@@ -401,9 +401,9 @@ create_github_issue() {
 
 ### Summary
 $(if [ "$status" = "PASS" ]; then
-    echo "🎯 Congratulations! HARDN-XDR has successfully achieved Lynis compliance."
+    echo "Congratulations! HARDN-XDR has successfully achieved Lynis compliance."
 else
-    echo "🔧 Additional remediation steps are required to achieve 90% Lynis compliance."
+    echo "Additional remediation steps are required to achieve 90% Lynis compliance."
 fi)
 
 ### Next Steps
@@ -528,7 +528,7 @@ main() {
     # Summary
     echo ""
     HARDN_STATUS "pass" "Remediation report generation complete!"
-    echo "📊 Reports generated:"
+    echo "Reports generated:"
     echo "   • Detailed Report: $REMEDIATION_REPORT"
     echo "   • GitHub Issue: $ISSUE_EXPORT"
     echo "   • Score Artifact: $SCORE_EXPORT"

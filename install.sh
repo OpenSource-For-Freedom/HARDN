@@ -21,20 +21,20 @@ check_system() {
         exit 1
     fi
     
-    echo "✅ Debian-based system detected"
+    echo "OK Debian-based system detected"
 }
 
 update_system() {
     echo "📦 Updating system packages..."
     if apt update && apt upgrade -y; then
-        echo "✅ System updated successfully"
+        echo "OK System updated successfully"
     else
-        echo "⚠️  System update encountered issues, continuing..."
+        echo "WARNING System update encountered issues, continuing..."
     fi
 }
 
 install_dependencies() {
-    echo "📋 Installing build dependencies..."
+    echo "Installing build dependencies..."
     apt install -y curl wget ca-certificates gnupg lsb-release
 }
 
@@ -49,9 +49,9 @@ install_hardn_package() {
     local github_url="https://github.com/OpenSource-For-Freedom/HARDN/releases/download/v${HARDN_VERSION}/hardn-xdr_${HARDN_VERSION}-1_all.deb"
     
     if curl -L -f "${github_url}" -o "hardn-xdr_${HARDN_VERSION}-1_all.deb"; then
-        echo "✅ Downloaded HARDN-XDR package from GitHub releases"
+        echo "OK Downloaded HARDN-XDR package from GitHub releases"
     else
-        echo "⚠️  GitHub release not found, building from source..."
+        echo "WARNING GitHub release not found, building from source..."
         
         # Install build dependencies
         apt install -y git debhelper-compat devscripts build-essential
@@ -67,11 +67,11 @@ install_hardn_package() {
     # Install the package
     echo "📦 Installing HARDN-XDR package..."
     if dpkg -i "hardn-xdr_${HARDN_VERSION}-1_all.deb"; then
-        echo "✅ HARDN-XDR package installed successfully"
+        echo "OK HARDN-XDR package installed successfully"
     else
-        echo "🔧 Fixing dependency issues..."
+        echo "Fixing dependency issues..."
         apt-get install -f -y
-        echo "✅ Dependencies resolved"
+        echo "OK Dependencies resolved"
     fi
     
     # Clean up
@@ -82,7 +82,7 @@ install_hardn_package() {
 show_completion() {
     cat << 'EOF'
 
-🎉 HARDN-XDR Installation Complete!
+HARDN-XDR Installation Complete!
 
 Next steps:
 1. Run system hardening:
@@ -100,7 +100,7 @@ Next steps:
 For documentation and support:
 https://github.com/OpenSource-For-Freedom/HARDN
 
-⚠️  IMPORTANT: HARDN-XDR makes significant system changes.
+WARNING IMPORTANT: HARDN-XDR makes significant system changes.
    Always test in a non-production environment first.
 
 EOF

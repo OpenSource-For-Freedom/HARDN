@@ -126,13 +126,13 @@ hardn_status() {
     
     case "${status}" in
         "pass")
-            log_info "✅ ${message}"
+            log_info "OK ${message}"
             ;;
         "warning"|"warn")
-            log_warn "⚠️  ${message}"
+            log_warn "WARNING ${message}"
             ;;
         "error"|"fail")
-            log_error "❌ ${message}"
+            log_error "ERROR ${message}"
             ;;
         "info")
             log_info "ℹ️  ${message}"
