@@ -386,7 +386,7 @@ create_github_issue() {
     if [ "$status" = "PASS" ]; then
         title="OK Lynis Compliance Achieved - Score: ${current_score}%"
     else
-        title="⚠️ Lynis Remediation Required - Score: ${current_score}%"
+        title="WARNING Lynis Remediation Required - Score: ${current_score}%"
     fi
     
     # Create simplified issue content
