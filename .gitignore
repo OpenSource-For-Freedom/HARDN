@@ -1,0 +1,23 @@
+# Logs
+*.log
+/tmp/
+/var/log/
+
+# Docker
+.dockerignore
+
+# Test artifacts
+lynis-*.dat
+lynis-*.log
+
+# Build artifacts
+*.tmp
+*.bak
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

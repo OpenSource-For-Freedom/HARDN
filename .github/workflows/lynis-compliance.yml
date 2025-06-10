@@ -1,0 +1,114 @@
+name: Lynis Security Compliance Testing
+
+on:
+  push:
+    branches: [ main, Primary ]
+  pull_request:
+    branches: [ main, Primary ]
+  workflow_dispatch:
+
+jobs:
+  lynis-baseline-test:
+    runs-on: ubuntu-latest
+    name: Test Baseline Lynis Score
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Build Docker image
+      run: |
+        docker build -t hardn-test .
+        
+    - name: Run baseline Lynis audit (before HARDN)
+      run: |
+        echo "=== BASELINE LYNIS AUDIT (BEFORE HARDN) ==="
+        docker run --rm hardn-test /hardn/test-lynis-compliance.sh || true
+        
+    - name: Install HARDN and run Lynis audit
+      run: |
+        echo "=== INSTALLING HARDN ==="
+        # Create a container and run HARDN installation
+        docker run -d --name hardn-container --privileged hardn-test sleep 3600
+        
+        # Copy the HARDN installation script and run it
+        echo "Installing HARDN system hardening..."
+        docker exec hardn-container bash -c "cd /hardn && ./src/setup/hardn-main.sh --non-interactive || true"
+        
+        echo "=== POST-HARDN LYNIS AUDIT ==="
+        docker exec hardn-container /hardn/test-lynis-compliance.sh
+        
+        # Cleanup
+        docker stop hardn-container
+        docker rm hardn-container
+
+  lynis-compliance-test:
+    runs-on: ubuntu-latest
+    name: Test Lynis Compliance Score >= 90%
+    needs: lynis-baseline-test
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Build Docker image
+      run: |
+        docker build -t hardn-test .
+        
+    - name: Run HARDN installation and Lynis compliance test
+      run: |
+        # Create a privileged container for system modifications
+        docker run -d --name hardn-container --privileged hardn-test sleep 3600
+        
+        # Install HARDN hardening
+        echo "Installing HARDN system hardening..."
+        docker exec hardn-container bash -c "cd /hardn && timeout 1800 ./src/setup/hardn-main.sh --non-interactive || echo 'HARDN installation completed with timeout or non-zero exit'"
+        
+        # Run Lynis compliance test
+        echo "Running Lynis compliance test..."
+        docker exec hardn-container /hardn/test-lynis-compliance.sh
+        
+        # Extract and display the compliance report
+        echo "=== COMPLIANCE REPORT ==="
+        docker exec hardn-container bash -c "if [ -f /tmp/lynis-report.dat ]; then grep -E '(hardening_index|suggestion|warning)' /tmp/lynis-report.dat | head -20; fi"
+        
+        # Cleanup
+        docker stop hardn-container
+        docker rm hardn-container
+
+  lynis-detailed-report:
+    runs-on: ubuntu-latest
+    name: Generate Detailed Lynis Report
+    needs: lynis-compliance-test
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Build Docker image
+      run: |
+        docker build -t hardn-test .
+        
+    - name: Generate detailed Lynis report
+      run: |
+        # Create container
+        docker run -d --name hardn-container --privileged hardn-test sleep 3600
+        
+        # Install HARDN
+        docker exec hardn-container bash -c "cd /hardn && timeout 1800 ./src/setup/hardn-main.sh --non-interactive || echo 'HARDN installation completed'"
+        
+        # Run detailed Lynis audit
+        echo "Running detailed Lynis audit..."
+        docker exec hardn-container bash -c "lynis audit system --no-colors --quiet --log-file /tmp/lynis-detailed.log --report-file /tmp/lynis-detailed-report.dat"
+        
+        # Extract detailed report
+        echo "=== DETAILED LYNIS REPORT ==="
+        docker exec hardn-container bash -c "if [ -f /tmp/lynis-detailed-report.dat ]; then cat /tmp/lynis-detailed-report.dat; fi"
+        
+        # Extract hardening index
+        echo "=== HARDENING INDEX ==="
+        docker exec hardn-container bash -c "if [ -f /tmp/lynis-detailed-report.dat ]; then grep 'hardening_index' /tmp/lynis-detailed-report.dat; fi"
+        
+        # Cleanup
+        docker stop hardn-container
+        docker rm hardn-container
