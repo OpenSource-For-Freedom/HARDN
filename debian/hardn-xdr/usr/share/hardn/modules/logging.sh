@@ -4,24 +4,20 @@
 # Provides centralized logging functionality with different log levels
 
 # ANSI color codes for colored output
-if [[ ! -v RED ]]; then
-    readonly RED='\033[0;31m'
-    readonly GREEN='\033[0;32m'
-    readonly YELLOW='\033[1;33m'
-    readonly BLUE='\033[0;34m'
-    readonly PURPLE='\033[0;35m'
-    readonly CYAN='\033[0;36m'
-    readonly WHITE='\033[1;37m'
-    readonly NC='\033[0m' # No Color
-fi
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[1;33m'
+readonly BLUE='\033[0;34m'
+readonly PURPLE='\033[0;35m'
+readonly CYAN='\033[0;36m'
+readonly WHITE='\033[1;37m'
+readonly NC='\033[0m' # No Color
 
 # Default log level (can be overridden by environment variable)
 LOG_LEVEL=${LOG_LEVEL:-info}
 
 # Log file path
-if [[ ! -v LOG_FILE ]]; then
-    readonly LOG_FILE="${HARDN_LOG_DIR:-/var/log/hardn}/hardn.log"
-fi
+readonly LOG_FILE="${HARDN_LOG_DIR:-/var/log/hardn}/hardn.log"
 
 # Initialize logging system
 init_logging() {

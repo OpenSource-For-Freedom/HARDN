@@ -5,33 +5,30 @@
 
 override_dh_auto_install:
 	# Install main executable
-	install -D -m 755 usr/bin/hardn $(DESTDIR)/usr/bin/hardn
+	install -D -m 755 usr/bin/hardn $(CURDIR)/debian/hardn-xdr/usr/bin/hardn
+	
+	# Install man page
+	install -D -m 644 hardn.1 $(CURDIR)/debian/hardn-xdr/usr/share/man/man1/hardn.1
 	
 	# Install modules
-	install -d $(DESTDIR)/usr/share/hardn/modules
-	install -m 644 usr/share/hardn/modules/*.sh $(DESTDIR)/usr/share/hardn/modules/
+	install -d $(CURDIR)/debian/hardn-xdr/usr/share/hardn/modules
+	install -m 644 usr/share/hardn/modules/*.sh $(CURDIR)/debian/hardn-xdr/usr/share/hardn/modules/
 	
-	# Install configuration files
-	install -d $(DESTDIR)/etc/hardn
-	install -m 644 usr/share/hardn/configs/*.conf $(DESTDIR)/etc/hardn/
-	
-	# Install templates
-	install -d $(DESTDIR)/usr/share/hardn/templates
-	install -m 644 usr/share/hardn/templates/* $(DESTDIR)/usr/share/hardn/templates/
+	# Install configuration templates
+	install -d $(CURDIR)/debian/hardn-xdr/usr/share/hardn/templates
+	install -m 644 usr/share/hardn/templates/* $(CURDIR)/debian/hardn-xdr/usr/share/hardn/templates/
 	
 	# Install documentation
-	install -d $(DESTDIR)/usr/share/doc/hardn
-	install -m 644 docs/*.md $(DESTDIR)/usr/share/doc/hardn/
+	install -d $(CURDIR)/debian/hardn-xdr/usr/share/doc/hardn-xdr
+	install -m 644 docs/*.md $(CURDIR)/debian/hardn-xdr/usr/share/doc/hardn-xdr/ || true
+	install -m 644 README.md $(CURDIR)/debian/hardn-xdr/usr/share/doc/hardn-xdr/
+	install -m 644 changelog.md $(CURDIR)/debian/hardn-xdr/usr/share/doc/hardn-xdr/
 	
 	# Install systemd service files
-	install -d $(DESTDIR)/lib/systemd/system
-	install -m 644 systemd/*.service $(DESTDIR)/lib/systemd/system/
+	install -d $(CURDIR)/debian/hardn-xdr/lib/systemd/system
+	install -m 644 systemd/*.service $(CURDIR)/debian/hardn-xdr/lib/systemd/system/
 	
-	# Create log directory
-	install -d $(DESTDIR)/var/log/hardn
-
-override_dh_systemd_enable:
-	dh_systemd_enable --name=hardn-monitor hardn-monitor.service
-
-override_dh_systemd_start:
-	dh_systemd_start --name=hardn-monitor hardn-monitor.service
+	# Create directories
+	install -d $(CURDIR)/debian/hardn-xdr/etc/hardn
+	install -d $(CURDIR)/debian/hardn-xdr/var/log/hardn
+	install -d $(CURDIR)/debian/hardn-xdr/var/lib/hardn/backups

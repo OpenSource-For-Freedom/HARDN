@@ -32,7 +32,6 @@ Depends: ${misc:Depends},
  apt-listchanges,
  apt-listbugs,
  unattended-upgrades,
- apt-transport-https,
  ca-certificates,
  software-properties-common,
  lsb-release,
@@ -54,7 +53,8 @@ Depends: ${misc:Depends},
  psmisc,
  procps,
  git,
- whiptail
+ whiptail,
+ adduser
 Recommends: nmap
 Description: Linux Security Hardening Extended Detection and Response
  HARDN-XDR is a comprehensive security hardening solution for Debian-based
