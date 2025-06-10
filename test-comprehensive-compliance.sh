@@ -89,7 +89,8 @@ test_system_hardening() {
         local expected_perm="${file_perm#*:}"
         
         if [ -f "${file}" ]; then
-            local actual_perm=$(stat -c "%a" "${file}" 2>/dev/null)
+            local actual_perm
+            actual_perm=$(stat -c "%a" "${file}" 2>/dev/null)
             if [ "${actual_perm}" = "${expected_perm}" ] || [ "${actual_perm}" -le "${expected_perm}" ]; then
                 echo "✅ File permissions correct: ${file} (${actual_perm})"
             else
@@ -111,7 +112,8 @@ test_firewall_config() {
     
     if command_exists "ufw"; then
         # Check UFW status
-        local ufw_status=$(ufw status 2>/dev/null | head -1)
+        local ufw_status
+        ufw_status=$(ufw status 2>/dev/null | head -1)
         if [[ "${ufw_status}" == *"active"* ]]; then
             echo "✅ UFW firewall is active"
         else
@@ -120,7 +122,8 @@ test_firewall_config() {
         fi
         
         # Check default policies
-        local ufw_verbose=$(ufw status verbose 2>/dev/null)
+        local ufw_verbose
+        ufw_verbose=$(ufw status verbose 2>/dev/null)
         if [[ "${ufw_verbose}" == *"deny (incoming)"* ]]; then
             echo "✅ UFW default incoming policy: deny"
         else
