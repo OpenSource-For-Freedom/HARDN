@@ -360,7 +360,7 @@ is_virtual_machine() {
         [[ "${virt_type}" != "none" ]]
     else
         # Fallback detection
-        [[ -n "$(dmesg | grep -i hypervisor)" ]] || [[ -n "$(lscpu | grep -i hypervisor)" ]]
+        dmesg | grep -qi hypervisor || lscpu | grep -qi hypervisor
     fi
 }
 

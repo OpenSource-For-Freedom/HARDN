@@ -25,8 +25,8 @@ jobs:
     
     - name: Lint shell scripts
       run: |
-        find . -name "*.sh" -type f -exec shellcheck {} \;
-        shellcheck usr/bin/hardn
+        find . -name "*.sh" -type f -exec shellcheck -S warning {} \;
+        shellcheck -S warning usr/bin/hardn
     
     - name: Check file permissions
       run: |

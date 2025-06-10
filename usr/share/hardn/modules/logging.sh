@@ -8,10 +8,10 @@ if [[ ! -v RED ]]; then
     readonly RED='\033[0;31m'
     readonly GREEN='\033[0;32m'
     readonly YELLOW='\033[1;33m'
-    readonly BLUE='\033[0;34m'
-    readonly PURPLE='\033[0;35m'
+    # readonly BLUE='\033[0;34m'     # Unused - available for future use
+    # readonly PURPLE='\033[0;35m'   # Unused - available for future use
     readonly CYAN='\033[0;36m'
-    readonly WHITE='\033[1;37m'
+    # readonly WHITE='\033[1;37m'    # Unused - available for future use
     readonly NC='\033[0m' # No Color
 fi
 
@@ -196,7 +196,7 @@ show_progress() {
     local filled=$((current * width / total))
     local empty=$((width - filled))
     
-    printf "\r${description}: ["
+    printf "\r%s: [" "${description}"
     printf "%${filled}s" | tr ' ' '█'
     printf "%${empty}s" | tr ' ' '░'
     printf "] %d%% (%d/%d)" "${percentage}" "${current}" "${total}"

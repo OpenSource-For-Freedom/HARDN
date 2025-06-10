@@ -1232,7 +1232,6 @@ restrict_compilers() {
 grub_security() {
 
     GRUB_CFG="/etc/grub.d/41_custom"
-    GRUB_DEFAULT="/etc/default/grub"
     GRUB_USER="hardnxdr"
     CUSTOM_CFG="/boot/grub/custom.cfg"
     GRUB_MAIN_CFG="/boot/grub/grub.cfg"
@@ -1251,12 +1250,10 @@ grub_security() {
 
     # Check system type
     if [ -d /sys/firmware/efi ]; then
-        SYSTEM_TYPE="EFI"
         echo "[INFO] Detected EFI boot system"
         echo "[INFO] GRUB security configuration is not required for EFI systems."
         return 0
     else
-        SYSTEM_TYPE="BIOS"
         echo "[INFO] Detected BIOS boot system"
     fi
 
@@ -1505,7 +1502,8 @@ enable_nameservers() {
        (readlink "$resolv_conf" | grep -qE "systemd/resolve/(stub-resolv.conf|resolv.conf)"); then
         HARDN_STATUS "info" "systemd-resolved is active and manages $resolv_conf."
         local resolved_conf_systemd="/etc/systemd/resolved.conf"
-        local temp_resolved_conf=$(mktemp)
+        local temp_resolved_conf
+        temp_resolved_conf=$(mktemp)
 
         if [[ ! -f "$resolved_conf_systemd" ]]; then
             HARDN_STATUS "info" "Creating $resolved_conf_systemd as it does not exist."
@@ -2160,8 +2158,7 @@ pen_test() {
     # Generate comprehensive remediation report
     HARDN_STATUS "info" "Generating comprehensive remediation report..."
     if [[ -f "${SCRIPT_DIR}/generate-remediation-report.sh" ]]; then
-        bash "${SCRIPT_DIR}/generate-remediation-report.sh"
-        if [[ $? -eq 0 ]]; then
+        if bash "${SCRIPT_DIR}/generate-remediation-report.sh"; then
             HARDN_STATUS "pass" "Remediation report generated successfully"
             HARDN_STATUS "info" "Check /var/log/hardn-reports/ for detailed remediation guidance"
         else

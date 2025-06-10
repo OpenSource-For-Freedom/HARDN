@@ -11,9 +11,6 @@ source "${HARDN_MODULES_DIR}/utils.sh"
 
 # Print welcome banner
 show_welcome_banner() {
-    local terminal_width
-    terminal_width=$(tput cols 2>/dev/null || echo 80)
-    
     cat << 'EOF'
 
    ▄█    █▄            ▄████████         ▄████████      ████████▄       ███▄▄▄▄   
@@ -78,7 +75,7 @@ install_security_packages() {
     log_info "Installing ${total_packages} security packages..."
     
     # Read and install packages
-    while IFS=, read -r name version debian_min_version debian_codenames_str rest || [[ -n "${name}" ]]; do
+    while IFS=, read -r name _version _debian_min_version _debian_codenames_str rest || [[ -n "${name}" ]]; do
         # Skip comments and empty lines
         [[ -z "${name}" || "${name}" =~ ^[[:space:]]*# ]] && continue
         
@@ -88,7 +85,7 @@ install_security_packages() {
         ((current_package++))
         
         if ! is_non_interactive; then
-            show_progress ${current_package} ${total_packages} "Installing packages"
+            show_progress "${current_package}" "${total_packages}" "Installing packages"
         fi
         
         log_debug "Processing package ${current_package}/${total_packages}: ${name}"
