@@ -13,7 +13,12 @@ echo "=== BASELINE LYNIS AUDIT ==="
 lynis audit system --quiet --no-colors --log-file /tmp/baseline.log --report-file /tmp/baseline.dat
 
 if [ -f /tmp/baseline.dat ]; then
-    BASELINE_SCORE=$(grep "hardening_index" /tmp/baseline.dat | cut -d"=" -f2 | tr -d " " || echo "0")
+    BASELINE_SCORE=$(grep "hardening_index" /tmp/baseline.dat | cut -d"=" -f2 | tr -d " " 2>/dev/null || echo "0")
+    # Validate that BASELINE_SCORE is numeric
+    if ! [[ "$BASELINE_SCORE" =~ ^[0-9]+$ ]]; then
+        echo "⚠️  Warning: Invalid baseline score format: '$BASELINE_SCORE', using 0"
+        BASELINE_SCORE=0
+    fi
     echo "Baseline Hardening Index: ${BASELINE_SCORE}%"
 else
     echo "⚠️  Warning: Could not determine baseline score"
@@ -26,10 +31,12 @@ echo "Running HARDN installation with 15-minute timeout..."
 
 # Install HARDN with timeout and capture output
 cd /hardn
-timeout 900 ./src/setup/hardn-main.sh --non-interactive 2>&1 | tail -20 || {
-    echo "⚠️  HARDN installation completed or timed out"
+if timeout 900 ./src/setup/hardn-main.sh --non-interactive 2>&1 | tail -20; then
+    echo "✅ HARDN installation completed successfully"
+else
+    echo "⚠️  HARDN installation completed with warnings or timed out (this is expected in some environments)"
     echo "Proceeding with post-installation Lynis audit..."
-}
+fi
 
 echo ""
 echo "=== POST-INSTALLATION LYNIS AUDIT ==="
@@ -39,7 +46,12 @@ echo "Running Lynis audit after HARDN installation..."
 lynis audit system --quiet --no-colors --log-file /tmp/post-hardn.log --report-file /tmp/post-hardn.dat
 
 if [ -f /tmp/post-hardn.dat ]; then
-    POST_SCORE=$(grep "hardening_index" /tmp/post-hardn.dat | cut -d"=" -f2 | tr -d " " || echo "0")
+    POST_SCORE=$(grep "hardening_index" /tmp/post-hardn.dat | cut -d"=" -f2 | tr -d " " 2>/dev/null || echo "0")
+    # Validate that POST_SCORE is numeric
+    if ! [[ "$POST_SCORE" =~ ^[0-9]+$ ]]; then
+        echo "⚠️  Warning: Invalid post-installation score format: '$POST_SCORE', using 0"
+        POST_SCORE=0
+    fi
     echo "Post-HARDN Hardening Index: ${POST_SCORE}%"
 else
     echo "❌ ERROR: Could not determine post-installation score"

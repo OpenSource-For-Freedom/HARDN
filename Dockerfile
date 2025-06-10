@@ -46,7 +46,12 @@ lynis audit system --quiet --no-colors --log-file /tmp/lynis.log --report-file /
 echo "\n=== LYNIS AUDIT COMPLETE ==="\n\
 echo "Checking compliance score..."\n\
 if [ -f /tmp/lynis-report.dat ]; then\n\
-    HARDENING_INDEX=$(grep "hardening_index" /tmp/lynis-report.dat | cut -d"=" -f2 | tr -d " ")\n\
+    HARDENING_INDEX=$(grep "hardening_index" /tmp/lynis-report.dat | cut -d"=" -f2 | tr -d " " 2>/dev/null || echo "0")\n\
+    # Validate that HARDENING_INDEX is numeric\n\
+    if ! echo "$HARDENING_INDEX" | grep -q "^[0-9]\\+$"; then\n\
+        echo "⚠️  Warning: Invalid hardening index format: '\''$HARDENING_INDEX'\'', using 0"\n\
+        HARDENING_INDEX=0\n\
+    fi\n\
     echo "Hardening Index: $HARDENING_INDEX%"\n\
     if [ "$HARDENING_INDEX" -ge 90 ]; then\n\
         echo "✅ PASS: Lynis compliance score is $HARDENING_INDEX% (>= 90%)"\n\

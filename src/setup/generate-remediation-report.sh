@@ -77,8 +77,15 @@ detect_environment() {
 
 # Parse Lynis report and extract current score
 get_lynis_score() {
+    local score=0
     if [ -f "$LYNIS_REPORT" ]; then
-        grep "hardening_index=" "$LYNIS_REPORT" 2>/dev/null | cut -d'=' -f2 | tr -d ' %' || echo "0"
+        score=$(grep "hardening_index=" "$LYNIS_REPORT" 2>/dev/null | cut -d'=' -f2 | tr -d ' %' || echo "0")
+        # Validate that score is numeric
+        if ! [[ "$score" =~ ^[0-9]+$ ]]; then
+            echo "0"
+        else
+            echo "$score"
+        fi
     else
         echo "0"
     fi
@@ -422,10 +429,11 @@ EOF
 )
 
     # Create JSON export for GitHub issue
-    cat > "$ISSUE_EXPORT" << EOF
+    {
+        cat << EOF
 {
   "title": "$title",
-  "body": $(echo "$issue_body" | jq -R -s .),
+  "body": $(echo "$issue_body" | jq -R -s . 2>/dev/null || echo '"Error processing issue body"'),
   "labels": [
     "compliance",
     "lynis",
@@ -439,11 +447,15 @@ EOF
     "hardn_version": "2.0.0",
     "lynis_score": $current_score,
     "environment": "$environment",
-    "timestamp": "$(date -Iseconds)",
+    "timestamp": "$(date -Iseconds 2>/dev/null || date)",
     "report_file": "$REMEDIATION_REPORT"
   }
 }
 EOF
+    } > "$ISSUE_EXPORT" 2>/dev/null || {
+        # Fallback if JSON generation fails
+        echo "{\"error\": \"Failed to generate issue export\", \"lynis_score\": $current_score}" > "$ISSUE_EXPORT"
+    }
 }
 
 # Export Lynis score as standalone artifacts for GitHub Actions
@@ -460,17 +472,22 @@ export_lynis_score_artifacts() {
     HARDN_STATUS "info" "Exported Lynis score to: $SCORE_EXPORT"
     
     # Export JSON format with additional metadata
-    cat > "$SCORE_JSON_EXPORT" << EOF
+    {
+        cat << EOF
 {
   "lynis_score": $current_score,
   "status": "$status",
   "environment": "$environment",
   "compliance_threshold": 90,
   "compliance_met": $([ "$current_score" -ge 90 ] && echo "true" || echo "false"),
-  "timestamp": "$(date -Iseconds)",
+  "timestamp": "$(date -Iseconds 2>/dev/null || date)",
   "hardn_version": "2.0.0"
 }
 EOF
+    } > "$SCORE_JSON_EXPORT" 2>/dev/null || {
+        # Fallback if JSON generation fails
+        echo "{\"lynis_score\": $current_score, \"status\": \"$status\", \"error\": \"JSON generation failed\"}" > "$SCORE_JSON_EXPORT"
+    }
     HARDN_STATUS "info" "Exported Lynis score JSON to: $SCORE_JSON_EXPORT"
 }
 
