@@ -1,18 +1,18 @@
-# Hardn XDR Code of Conduct
+# HARDN-XDR Code of Conduct
 
-Like the technical community as a whole, the Hardn XDR team and community is made up of a mixture of professionals and volunteers from all over the world, working on every aspect of the mission - including mentorship, teaching, and connecting people.
+Like the technical community as a whole, the HARDN-XDR team and community is made up of a mixture of professionals and volunteers from all over the world, working on every aspect of the mission - including mentorship, teaching, and connecting people.
 
 Diversity is one of our huge strengths, but it can also lead to communication issues and unhappiness. To that end, we have a few ground rules that we ask people to adhere to. This code applies equally to founders, mentors and those seeking help and guidance.
 
 This isn’t an exhaustive list of things that you can’t do. Rather, take it in the spirit in which it’s intended - a guide to make it easier to enrich all of us and the technical communities in which we participate.
 
-This code of conduct applies to all spaces managed by the Hardn XDR project or SIG. This includes IRC, the mailing lists, the issue tracker, DSF events, and any other forums created by the project team which the community uses for communication. In addition, violations of this code outside these spaces may affect a person's ability to participate within them.
+This code of conduct applies to all spaces managed by the HARDN-XDR project. This includes IRC, mailing lists, the issue tracker, events, and any other forums created by the project team which the community uses for communication. In addition, violations of this code outside these spaces may affect a person's ability to participate within them.
 
 ## Source Code Protection
 
-The OS community is driven by thinkers, engineer's, developers and users. The Git files reside in a public space for that, our community. Certain polices exist unseen realting to "stealing" or "plagerising" source code from an original idea-repository, and using it to benifit ones desires or mal-intent. This is not supported and should be respected as an "Open Source Violation" to our Code, Freedom of use, not theft. 
+The open source community is driven by thinkers, engineers, developers and users. The Git files reside in a public space for our community. Certain policies exist relating to "stealing" or "plagiarizing" source code from an original repository, and using it to benefit one's desires or malicious intent. This is not supported and should be respected as an "Open Source Violation" to our code. Freedom of use, not theft.
 
-If you believe someone is violating the code of conduct, we ask that you report it by emailing [office@cybersynapse.ro ](mailto:office@cybersynapse.ro ). For more details please see our [Reporting guidelines](https://github.com/EthicalSource/contributor_covenant)
+If you believe someone is violating the code of conduct, we ask that you report it by emailing [office@cybersynapse.ro](mailto:office@cybersynapse.ro). For more details please see our [Reporting guidelines](https://github.com/EthicalSource/contributor_covenant).
 ## The Community
 
 - **Be friendly and patient.**
@@ -34,4 +34,4 @@ Original text courtesy of the [Speak Up! project](http://web.archive.org/web/201
 
 ## Questions?
 
-If you have questions, please see . If that doesn't answer your questions, feel free to [contact us](mailto:office@cybersynapse.ro ).
+If you have questions, feel free to [contact us](mailto:office@cybersynapse.ro).
