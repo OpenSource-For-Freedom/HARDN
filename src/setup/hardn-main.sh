@@ -649,7 +649,23 @@ EOF
 
             cd /tmp || { HARDN_STATUS "error" "Error: Cannot change directory to /tmp."; return 1; }
             HARDN_STATUS "info" "Cloning rkhunter from GitHub..."
-            if git clone https://github.com/rootkitHunter/rkhunter.git rkhunter_github_clone >/dev/null 2>&1; then
+            
+            # Add retry logic for git clone
+            MAX_RETRIES=3
+            COUNT=0
+            CLONE_SUCCESS=false
+            
+            while [ $COUNT -lt $MAX_RETRIES ]; do
+                if git clone https://github.com/rootkitHunter/rkhunter.git rkhunter_github_clone >/dev/null 2>&1; then
+                    CLONE_SUCCESS=true
+                    break
+                fi
+                COUNT=$((COUNT+1))
+                HARDN_STATUS "warning" "Git clone attempt $COUNT/$MAX_RETRIES failed, retrying in 5 seconds..."
+                sleep 5
+            done
+            
+            if [ "$CLONE_SUCCESS" = true ]; then
                 cd rkhunter_github_clone || { HARDN_STATUS "error" "Error: Cannot change directory to rkhunter_github_clone."; return 1; }
                 HARDN_STATUS "info" "Running rkhunter installer..."
                 if ./installer.sh --install >/dev/null 2>&1; then
@@ -659,7 +675,7 @@ EOF
                 fi
                 cd .. && rm -rf rkhunter_github_clone
             else
-                HARDN_STATUS "error" "Error: Failed to clone rkhunter from GitHub."
+                HARDN_STATUS "error" "Error: Failed to clone rkhunter from GitHub after $MAX_RETRIES attempts."
             fi
         fi
     else
@@ -1175,7 +1191,23 @@ EOF
         fi
 
         HARDN_STATUS "info" "Cloning YARA rules from $rules_repo_url to $temp_dir..."
-        if git clone --depth 1 "$rules_repo_url" "$temp_dir" >/dev/null 2>&1; then
+        
+        # Add retry logic for git clone
+        MAX_RETRIES=3
+        COUNT=0
+        CLONE_SUCCESS=false
+        
+        while [ $COUNT -lt $MAX_RETRIES ]; do
+            if git clone --depth 1 "$rules_repo_url" "$temp_dir" >/dev/null 2>&1; then
+                CLONE_SUCCESS=true
+                break
+            fi
+            COUNT=$((COUNT+1))
+            HARDN_STATUS "warning" "YARA rules git clone attempt $COUNT/$MAX_RETRIES failed, retrying in 5 seconds..."
+            sleep 5
+        done
+        
+        if [ "$CLONE_SUCCESS" = true ]; then
             HARDN_STATUS "pass" "YARA rules cloned successfully."
 
             HARDN_STATUS "info" "Copying .yar rules to /etc/yara/rules/..."
@@ -1196,7 +1228,7 @@ EOF
             fi
 
         else
-            HARDN_STATUS "error" "Error: Failed to clone YARA rules repository."
+            HARDN_STATUS "error" "Error: Failed to clone YARA rules repository after $MAX_RETRIES attempts."
         fi
 
         HARDN_STATUS "info" "Cleaning up temporary directory $temp_dir..."
