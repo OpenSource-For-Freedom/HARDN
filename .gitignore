@@ -14,6 +14,13 @@ lynis-*.log
 *.tmp
 *.bak
 
+# Debian packaging build artifacts
+debian/.debhelper/
+debian/files
+debian/*.substvars
+debian/*.debhelper
+debian/hardn-xdr/
+
 # IDE
 .vscode/
 .idea/

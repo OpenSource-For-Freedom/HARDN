@@ -207,6 +207,7 @@ show_progress() {
 }
 
 # Function to create a separator line in logs
+# shellcheck disable=SC2120
 log_separator() {
     local char="${1:-=}"
     local length="${2:-80}"
