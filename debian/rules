@@ -22,7 +22,7 @@ override_dh_auto_install:
 	install -d $(CURDIR)/debian/hardn-xdr/usr/share/doc/hardn-xdr
 	install -m 644 docs/*.md $(CURDIR)/debian/hardn-xdr/usr/share/doc/hardn-xdr/ || true
 	install -m 644 README.md $(CURDIR)/debian/hardn-xdr/usr/share/doc/hardn-xdr/
-	install -m 644 changelog.md $(CURDIR)/debian/hardn-xdr/usr/share/doc/hardn-xdr/
+	install -m 644 docs/changelog.md $(CURDIR)/debian/hardn-xdr/usr/share/doc/hardn-xdr/
 	
 	# Install systemd service files
 	install -d $(CURDIR)/debian/hardn-xdr/lib/systemd/system
