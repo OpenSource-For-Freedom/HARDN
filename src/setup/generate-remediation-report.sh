@@ -80,13 +80,12 @@ detect_environment() {
 get_lynis_score() {
     local score=0
     if [ -f "$LYNIS_REPORT" ]; then
-        score=$(grep "hardening_index=" "$LYNIS_REPORT" 2>/dev/null | cut -d'=' -f2 | tr -d ' %' || echo "0")
+        score=$(grep "hardening_index=" "$LYNIS_REPORT" 2>/dev/null | cut -d'=' -f2 | tr -d ' %' 2>/dev/null || echo "0")
         # Validate that score is numeric
-        if ! [[ "$score" =~ ^[0-9]+$ ]]; then
-            echo "0"
-        else
-            echo "$score"
+        if ! [[ "$score" =~ ^[0-9]+$ ]] 2>/dev/null; then
+            score="0"
         fi
+        echo "$score"
     else
         echo "0"
     fi
@@ -100,19 +99,19 @@ extract_suggestions() {
     if [ -f "$report_file" ]; then
         case "$category" in
             "critical")
-                grep "suggestion\[\]" "$report_file" | grep -E "(ROOT|PRIV|AUTH|PASS|CRYPT)" | head -10
+                grep "suggestion\[\]" "$report_file" 2>/dev/null | grep -E "(ROOT|PRIV|AUTH|PASS|CRYPT)" 2>/dev/null | head -10 || true
                 ;;
             "security")
-                grep "suggestion\[\]" "$report_file" | grep -E "(SSH|FIRE|AUDIT|LOG)" | head -10
+                grep "suggestion\[\]" "$report_file" 2>/dev/null | grep -E "(SSH|FIRE|AUDIT|LOG)" 2>/dev/null | head -10 || true
                 ;;
             "system")
-                grep "suggestion\[\]" "$report_file" | grep -E "(KERN|BOOT|PROC|FILE)" | head -10
+                grep "suggestion\[\]" "$report_file" 2>/dev/null | grep -E "(KERN|BOOT|PROC|FILE)" 2>/dev/null | head -10 || true
                 ;;
             "network")
-                grep "suggestion\[\]" "$report_file" | grep -E "(NET|PORT|SERV)" | head -10
+                grep "suggestion\[\]" "$report_file" 2>/dev/null | grep -E "(NET|PORT|SERV)" 2>/dev/null | head -10 || true
                 ;;
             "all")
-                grep "suggestion\[\]" "$report_file"
+                grep "suggestion\[\]" "$report_file" 2>/dev/null || true
                 ;;
         esac
     fi
@@ -213,10 +212,10 @@ EOF
     # Extract and format critical suggestions
     extract_suggestions "$LYNIS_REPORT" "critical" | while IFS= read -r line; do
         if [ -n "$line" ]; then
-            suggestion=$(echo "$line" | sed 's/suggestion\[\]=//' | sed 's/|/ - /')
+            suggestion=$(echo "$line" | sed 's/suggestion\[\]=//' | sed 's/|/ - /' 2>/dev/null || echo "$line")
             echo "- $suggestion"
         fi
-    done
+    done 2>/dev/null || echo "- No critical suggestions found"
 
     cat << EOF
 
@@ -235,10 +234,10 @@ EOF
     # Extract and format system suggestions
     extract_suggestions "$LYNIS_REPORT" "system" | while IFS= read -r line; do
         if [ -n "$line" ]; then
-            suggestion=$(echo "$line" | sed 's/suggestion\[\]=//' | sed 's/|/ - /')
+            suggestion=$(echo "$line" | sed 's/suggestion\[\]=//' | sed 's/|/ - /' 2>/dev/null || echo "$line")
             echo "- $suggestion"
         fi
-    done
+    done 2>/dev/null || echo "- No system suggestions found"
 
     cat << EOF
 
@@ -249,10 +248,10 @@ EOF
     # Extract and format network suggestions
     extract_suggestions "$LYNIS_REPORT" "network" | while IFS= read -r line; do
         if [ -n "$line" ]; then
-            suggestion=$(echo "$line" | sed 's/suggestion\[\]=//' | sed 's/|/ - /')
+            suggestion=$(echo "$line" | sed 's/suggestion\[\]=//' | sed 's/|/ - /' 2>/dev/null || echo "$line")
             echo "- $suggestion"
         fi
-    done
+    done 2>/dev/null || echo "- No network suggestions found"
 }
 
 # Generate detailed command examples
@@ -358,7 +357,9 @@ EOF
 EOF
     
     if [ -f "$LYNIS_REPORT" ]; then
-        extract_suggestions "$LYNIS_REPORT" "all" | sed 's/suggestion\[\]=//' >> "$REMEDIATION_REPORT"
+        extract_suggestions "$LYNIS_REPORT" "all" | sed 's/suggestion\[\]=//' 2>/dev/null >> "$REMEDIATION_REPORT" || echo "No suggestions available" >> "$REMEDIATION_REPORT"
+    else
+        echo "Lynis report not available" >> "$REMEDIATION_REPORT"
     fi
     
     cat >> "$REMEDIATION_REPORT" << EOF
@@ -369,7 +370,9 @@ EOF
 EOF
     
     if [ -f "$LYNIS_REPORT" ]; then
-        grep "warning\[\]" "$LYNIS_REPORT" | sed 's/warning\[\]=//' >> "$REMEDIATION_REPORT"
+        grep "warning\[\]" "$LYNIS_REPORT" 2>/dev/null | sed 's/warning\[\]=//' >> "$REMEDIATION_REPORT" || echo "No warnings available" >> "$REMEDIATION_REPORT"
+    else  
+        echo "Lynis report not available" >> "$REMEDIATION_REPORT"
     fi
     
     echo '```' >> "$REMEDIATION_REPORT"
@@ -429,10 +432,13 @@ EOF
 
     # Create JSON export for GitHub issue
     {
+        # Use safer method to create JSON
+        local escaped_body
+        escaped_body=$(echo "$issue_body" | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g' 2>/dev/null || echo "Error processing issue body")
         cat << EOF
 {
   "title": "$title",
-  "body": $(echo "$issue_body" | jq -R -s . 2>/dev/null || echo '"Error processing issue body"'),
+  "body": "$escaped_body",
   "labels": [
     "compliance",
     "lynis",
