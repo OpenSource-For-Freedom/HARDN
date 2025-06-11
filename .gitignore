@@ -20,6 +20,7 @@ debian/files
 debian/*.substvars
 debian/*.debhelper
 debian/hardn-xdr/
+debian/debhelper-build-stamp
 *.deb
 
 # IDE
