@@ -36,11 +36,11 @@ jobs:
         docker exec hardn-container bash -c "cd /hardn && ./src/setup/hardn-main.sh --non-interactive || true"
         
         echo "=== POST-HARDN LYNIS AUDIT ==="
-        docker exec hardn-container bash -c "lynis audit system --quiet --no-colors --log-file /tmp/lynis.log --report-file /tmp/lynis-report.dat && HARDENING_INDEX=\$(grep 'hardening_index' /tmp/lynis-report.dat | cut -d'=' -f2 | tr -d ' ' 2>/dev/null || echo '0') && echo 'Hardening Index: \$HARDENING_INDEX%' && if [ \"\$HARDENING_INDEX\" -ge 90 ]; then echo 'PASS: Lynis compliance score is \$HARDENING_INDEX% (>= 90%)'; else echo 'FAIL: Lynis compliance score is \$HARDENING_INDEX% (< 90%)'; fi"
+        docker exec hardn-container bash -c "lynis audit system --quiet --no-colors --log-file /tmp/lynis.log --report-file /tmp/lynis-report.dat && HARDENING_INDEX=\$(grep 'hardening_index' /tmp/lynis-report.dat | cut -d'=' -f2 | tr -d ' ' 2>/dev/null || echo '0') && echo \"Hardening Index: \${HARDENING_INDEX}%\" && if [ \"\${HARDENING_INDEX}\" -ge 90 ]; then echo \"PASS: Lynis compliance score is \${HARDENING_INDEX}% (>= 90%)\"; else echo \"FAIL: Lynis compliance score is \${HARDENING_INDEX}% (< 90%)\"; fi"
         
         # Cleanup
-        docker stop hardn-container
-        docker rm hardn-container
+        docker stop hardn-container || true
+        docker rm hardn-container || true
 
   lynis-compliance-test:
     runs-on: ubuntu-latest
@@ -66,15 +66,15 @@ jobs:
         
         # Run Lynis compliance test
         echo "Running Lynis compliance test..."
-        docker exec hardn-container bash -c "lynis audit system --quiet --no-colors --log-file /tmp/lynis.log --report-file /tmp/lynis-report.dat && HARDENING_INDEX=\$(grep 'hardening_index' /tmp/lynis-report.dat | cut -d'=' -f2 | tr -d ' ' 2>/dev/null || echo '0') && echo 'Hardening Index: \$HARDENING_INDEX%' && if [ \"\$HARDENING_INDEX\" -ge 90 ]; then echo 'PASS: Lynis compliance score is \$HARDENING_INDEX% (>= 90%)'; exit 0; else echo 'FAIL: Lynis compliance score is \$HARDENING_INDEX% (< 90%)'; exit 1; fi"
+        docker exec hardn-container bash -c "lynis audit system --quiet --no-colors --log-file /tmp/lynis.log --report-file /tmp/lynis-report.dat && HARDENING_INDEX=\$(grep 'hardening_index' /tmp/lynis-report.dat | cut -d'=' -f2 | tr -d ' ' 2>/dev/null || echo '0') && echo \"Hardening Index: \${HARDENING_INDEX}%\" && if [ \"\${HARDENING_INDEX}\" -ge 90 ]; then echo \"PASS: Lynis compliance score is \${HARDENING_INDEX}% (>= 90%)\"; exit 0; else echo \"FAIL: Lynis compliance score is \${HARDENING_INDEX}% (< 90%)\"; exit 1; fi"
         
         # Extract and display the compliance report
         echo "=== COMPLIANCE REPORT ==="
         docker exec hardn-container bash -c "if [ -f /tmp/lynis-report.dat ]; then grep -E '(hardening_index|suggestion|warning)' /tmp/lynis-report.dat | head -20; fi"
         
         # Cleanup
-        docker stop hardn-container
-        docker rm hardn-container
+        docker stop hardn-container || true
+        docker rm hardn-container || true
 
   lynis-detailed-report:
     runs-on: ubuntu-latest
@@ -124,8 +124,8 @@ jobs:
         docker cp hardn-container:/tmp/lynis-detailed.log ./artifacts/lynis-detailed.log || echo "No detailed log found"
         
         # Cleanup
-        docker stop hardn-container
-        docker rm hardn-container
+        docker stop hardn-container || true
+        docker rm hardn-container || true
         
     - name: Upload report artifacts
       uses: actions/upload-artifact@v4
