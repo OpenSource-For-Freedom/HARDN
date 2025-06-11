@@ -119,13 +119,9 @@ jobs:
         mkdir -p ./artifacts
         
         # Copy reports from container to host
-        docker cp hardn-container:/var/log/hardn-reports/ ./artifacts/ || echo "No reports directory found"
+        docker cp hardn-container:/var/log/hardn-reports/. ./artifacts/ || echo "No reports directory found"
         docker cp hardn-container:/tmp/lynis-detailed-report.dat ./artifacts/lynis-detailed-report.dat || echo "No detailed report found"
         docker cp hardn-container:/tmp/lynis-detailed.log ./artifacts/lynis-detailed.log || echo "No detailed log found"
-        
-        # Copy Lynis score artifacts specifically (these should already be in hardn-reports, but explicit for clarity)
-        docker cp hardn-container:/var/log/hardn-reports/lynis-score.txt ./artifacts/lynis-score.txt || echo "No score text file found"
-        docker cp hardn-container:/var/log/hardn-reports/lynis-score.json ./artifacts/lynis-score.json || echo "No score JSON file found"
         
         # Cleanup
         docker stop hardn-container

@@ -1,9 +1,0 @@
-{
-  "lynis_score": 75,
-  "status": "REMEDIATION_REQUIRED",
-  "environment": "Physical/Desktop",
-  "compliance_threshold": 90,
-  "compliance_met": false,
-  "timestamp": "2025-06-11T00:35:24+00:00",
-  "hardn_version": "2.0.0"
-}
