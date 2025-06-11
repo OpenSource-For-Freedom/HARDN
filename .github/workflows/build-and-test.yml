@@ -132,6 +132,9 @@ jobs:
     runs-on: ubuntu-latest
     name: Security Scanning
     needs: build
+    permissions:
+      security-events: write
+      contents: read
     
     steps:
     - uses: actions/checkout@v4
