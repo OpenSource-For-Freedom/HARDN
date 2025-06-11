@@ -1,53 +1,57 @@
 # Changelog
 
+All notable changes to HARDN-XDR are documented in this file.
 
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### Major Release - Final Public Version
-
-#### Added
-- **Version Tracking**: Added explicit version identifier (v2.0.0) throughout the script and user interface
-- **Enhanced User Experience**: Improved welcome messages, banners, and completion notifications with version information
-- **Production Ready**: Finalized as the definitive public release of HARDN-XDR
-
-#### Improved
-- **User Interface**: Enhanced all user-facing messages with clearer version information and better formatting
-- **Feedback Systems**: Improved completion messages and system cleanup notifications
-- **Code Quality**: Maintained high code quality standards from previous ShellCheck improvements
-
-#### Fixed
-- **Version Consistency**: Unified version numbering across all components
-- **User Communication**: Better feedback during installation and completion phases
-
-### Final Mission Goals
-- Comprehensive STIG compliance for Debian-based systems
-- Advanced malware detection and response capabilities
-- Complete system hardening with security tools integration
-- Central logging and monitoring systems
-- Extended Detection and Response (XDR) functionality
-
----
-
-## Version 1.1.8
+## [2.0.0] - 2024-06-11
 
 ### Added
-- **New Feature**: Introduced a new feature for enhanced system monitoring.
+- Complete modular architecture with 10 specialized security modules
+- Native Debian package (.deb) with proper dependency management
+- Professional CLI interface with full argument parsing
+- Comprehensive logging framework with file rotation
+- Systemd service integration with security restrictions
+- FHS-compliant directory structure
+- Automated backup and restore functionality
+- CI/CD pipeline with GitHub Actions
+- Enhanced STIG compliance implementation
+- Manual page documentation
 
-### Improved
-- **Performance**: Optimized system performance for faster execution of tasks.
+### Changed
+- Refactored from monolithic 2,300+ line script to modular architecture
+- Migrated to FHS-compliant filesystem layout
+- Improved error handling and status reporting
+- Enhanced user interface with better feedback systems
+- Standardized configuration management
+
+### Security
+- Implemented comprehensive STIG controls
+- Enhanced audit trail capabilities
+- Improved security hardening measures
+- Added principle of least privilege throughout
+- Strengthened system integrity monitoring
+
+## [1.1.8] - Previous Release
+
+### Added
+- Enhanced system monitoring capabilities
+- Improved performance optimization
 
 ### Fixed
-- **Bug Fixes**: Resolved minor bugs reported in version `1.1.6`.
+- Resolved minor bugs from version 1.1.6
 
----
-## Version 1.1.6
+## [1.1.6] - Previous Release
 
 ### Added
-- **Internet Connectivity Check**: Added a function to verify internet connectivity before proceeding with the setup.
-- **Linux Malware Detect (maldet)**: Automated installation and configuration of maldet.
-- **Audit Rules**: Configured audit rules for critical system files like `/etc/passwd` and `/etc/shadow`.
+- Internet connectivity verification
+- Linux Malware Detect (maldet) integration
+- Audit rules for critical system files
 
 ### Improved
-- **File Permissions**: Fixed permissions for critical files such as `/etc/shadow` and `/etc/passwd`.
+- File permissions for critical system files
+- System security configuration
 - **Service Management**: Enhanced error handling and ensured `Fail2Ban`, `AppArmor`, and `auditd` are enabled and running at boot.
 - **SSH Hardening**: Enforced stricter SSH settings for improved security.
 - **Kernel Randomization**: Ensured kernel randomization is applied persistently and at runtime.
