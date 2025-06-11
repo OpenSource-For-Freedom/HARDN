@@ -76,16 +76,20 @@ jobs:
       run: |
         dpkg-buildpackage -us -uc -b
     
+    - name: Move package to current directory
+      run: |
+        mv ../hardn-xdr_*.deb ./
+    
     - name: Check package with lintian
       run: |
         sudo apt-get install -y lintian
-        lintian ../hardn-xdr_*.deb || true  # Don't fail on lintian warnings for now
+        lintian hardn-xdr_*.deb || true  # Don't fail on lintian warnings for now
     
     - name: Upload package artifact
       uses: actions/upload-artifact@v4
       with:
         name: hardn-xdr-deb
-        path: ../hardn-xdr_*.deb
+        path: hardn-xdr_*.deb
 
   test:
     runs-on: ubuntu-latest
