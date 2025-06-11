@@ -37,7 +37,6 @@ COPY . /hardn/
 RUN chmod +x /hardn/install.sh && \
     chmod +x /hardn/src/setup/hardn-main.sh && \
     chmod +x /hardn/src/setup/generate-remediation-report.sh && \
-    chmod +x /hardn/src/setup/hardn-uninstall.sh && \
     chmod +x /hardn/test-hardn-installation.sh && \
     chmod +x /hardn/test-comprehensive-compliance.sh && \
     chmod +x /hardn/test-lynis-compliance.sh
