@@ -11,6 +11,8 @@
 # The script systematically hardens various aspects of the system.
 HARDN_VERSION="2.0.0"
 export APT_LISTBUGS_FRONTEND=none
+# Set TERM for non-interactive environments to prevent tput errors
+export TERM="${TERM:-xterm}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROGS_CSV_PATH="${SCRIPT_DIR}/../../progs.csv"
 CURRENT_DEBIAN_VERSION_ID=""
@@ -205,7 +207,12 @@ install_package_dependencies() {
 print_ascii_banner() { 
 
     local terminal_width
-    terminal_width=$(tput cols)
+    # Handle non-interactive environments where TERM may not be set
+    if [[ -n "${TERM:-}" ]] && command -v tput >/dev/null 2>&1; then
+        terminal_width=$(tput cols 2>/dev/null || echo 80)
+    else
+        terminal_width=80
+    fi
     local banner
     banner=$(cat << "EOF"
 
@@ -2250,7 +2257,7 @@ NON_INTERACTIVE_MODE=false
 whiptail_infobox() {
     local message="$1"
     if [ "$NON_INTERACTIVE_MODE" = false ]; then
-        whiptail_infobox "$message"
+        whiptail --infobox "$message" 8 78
     else
         HARDN_STATUS "info" "$message"
     fi
