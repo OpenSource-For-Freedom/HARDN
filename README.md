@@ -66,7 +66,7 @@ HARDN-XDR v2.0.0 follows a modular architecture with proper Linux filesystem hie
 /etc/hardn/hardn.conf             # System configuration
 /var/log/hardn/                   # Application logs
 /var/lib/hardn/                   # Application data
-/lib/systemd/system/              # Service files
+/lib/systemd/system/             
 ```
 
 ### Core Modules
@@ -83,18 +83,18 @@ HARDN-XDR v2.0.0 follows a modular architecture with proper Linux filesystem hie
 ### Source Repository Structure
 ```
 HARDN-XDR/
-├── docs/                         # Documentation
-│   ├── assets/                   # Images and resources
-│   ├── CODE_OF_CONDUCT.md        # Community guidelines
-│   ├── HARDN.md                  # Detailed documentation
-│   ├── deb_stig.md               # STIG compliance guide
-│   └── refactoring-summary.md    # v2.0.0 transformation details
-├── debian/                       # Debian packaging
-├── src/                          # Source modules
-├── systemd/                      # Service configurations
-├── usr/                          # Installation files
-├── install.sh                   # Installation script
-└── README.md                     # This file
+├── docs/                        
+│   ├── assets/                  
+│   ├── CODE_OF_CONDUCT.md       
+│   ├── HARDN.md                  
+│   ├── deb_stig.md               
+│   └── refactoring-summary.md    
+├── debian/                       
+├── src/                         
+├── systemd/                     
+├── usr/                          
+├── install.sh                   
+└── README.md                    
 ```
 
 ## License
