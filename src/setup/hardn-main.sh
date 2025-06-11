@@ -96,11 +96,22 @@ preinstallmsg() {
 
 update_system_packages() {
     HARDN_STATUS "pass" "Updating system packages..."
-    if DEBIAN_FRONTEND=noninteractive timeout 10s apt-get -o Acquire::ForceIPv4=true update -y; then
-        HARDN_STATUS "pass" "System package list updated successfully."
-    else
-        HARDN_STATUS "warning" "apt-get update failed or timed out after 60 seconds. Check your network or apt sources, but continuing script."
-    fi
+    
+    # Add retry logic for network-dependent operations
+    MAX_RETRIES=3
+    COUNT=0
+    
+    while [ $COUNT -lt $MAX_RETRIES ]; do
+        if DEBIAN_FRONTEND=noninteractive timeout 30s apt-get -o Acquire::ForceIPv4=true update -y; then
+            HARDN_STATUS "pass" "System package list updated successfully."
+            return 0
+        fi
+        COUNT=$((COUNT+1))
+        HARDN_STATUS "warning" "apt-get update attempt $COUNT/$MAX_RETRIES failed or timed out. Retrying..."
+        sleep 5
+    done
+    
+    HARDN_STATUS "warning" "apt-get update failed after $MAX_RETRIES attempts. Check your network or apt sources, but continuing script."
 }
 
 # install_package_dependencies
