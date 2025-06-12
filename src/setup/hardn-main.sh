@@ -409,6 +409,9 @@ setup_security(){
     fi
 
     HARDN_STATUS "info" "Setting up security tools and configurations..."
+    
+    # Create USB storage blacklist configuration
+    cat > /etc/modprobe.d/blacklist-usb-storage.conf << 'EOF'
 # HARDN-XDR USB Security Configuration
 # Block USB storage devices while allowing keyboards and mice
 blacklist usb-storage
