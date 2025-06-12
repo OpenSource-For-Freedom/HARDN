@@ -337,7 +337,7 @@ jobs:
         sudo systemctl status hardn-monitor || echo "Service not active (may be expected)"
         
         # Handle php8.3-fpm.service timeout if it exists
-        if systemctl list-units --full -all | grep -q "php8.3-fmp.service"; then
+        if systemctl list-units --full -all | grep -q "php8.3-fpm.service"; then
           echo "Restarting php8.3-fpm.service with increased timeout..."
           sudo systemctl restart php8.3-fpm.service --timeout=300 || true
         fi
@@ -374,14 +374,14 @@ jobs:
         echo "version=$VERSION" >> $GITHUB_OUTPUT
     
     - name: Create Release
-      uses: actions/create-release@v1
+      id: create_release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: v${{ steps.version.outputs.version }}
-        release_name: HARDN-XDR v${{ steps.version.outputs.version }}
-        body: |
-          ## HARDN-XDR v${{ steps.version.outputs.version }}
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        gh release create "v${VERSION}" \
+          --title "HARDN-XDR v${VERSION}" \
+          --notes "## HARDN-XDR v${VERSION}
           
           ### Changes
           - Refactored into modular architecture
@@ -391,28 +391,17 @@ jobs:
           - Enhanced security compliance
           
           ### Installation
-          ```bash
-          wget https://github.com/OpenSource-For-Freedom/HARDN/releases/download/v${{ steps.version.outputs.version }}/hardn-xdr_${{ steps.version.outputs.version }}_all.deb
-          sudo dpkg -i hardn-xdr_${{ steps.version.outputs.version }}_all.deb
+          \`\`\`bash
+          wget https://github.com/OpenSource-For-Freedom/HARDN/releases/download/v${VERSION}/hardn-xdr_${VERSION}_all.deb
+          sudo dpkg -i hardn-xdr_${VERSION}_all.deb
           sudo apt-get install -f  # Fix any dependency issues
-          ```
+          \`\`\`
           
           ### Usage
-          ```bash
+          \`\`\`bash
           hardn setup              # Interactive system hardening
           hardn audit              # Run security audit
           hardn status             # Show system status
           hardn --help             # Show all commands
-          ```
-        draft: false
-        prerelease: false
-    
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./hardn-xdr_${{ steps.version.outputs.version }}_all.deb
-        asset_name: hardn-xdr_${{ steps.version.outputs.version }}_all.deb
-        asset_content_type: application/vnd.debian.binary-package
+          \`\`\`" \
+          ./hardn-xdr_${VERSION}_all.deb
