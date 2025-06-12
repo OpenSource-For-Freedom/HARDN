@@ -1,14 +1,5 @@
 #!/bin/bash
 
-# HARDN-XDR - The Linux Security Hardening Sentinel
-# Version 2.0.0
-# Developed and built by Christopher Bingham and Tim Burns
-# About this script:
-# STIG Compliance: Security Technical Implementation Guide.
-# This is a comprehensive system hardening tool designed for Debian-based Linux distributions.
-# It implements a wide range of security measures following industry best practices and,
-# STIG (Security Technical Implementation Guide) compliance standards.
-# The script systematically hardens various aspects of the system.
 HARDN_VERSION="2.0.0"
 export APT_LISTBUGS_FRONTEND=none
 # Set TERM for non-interactive environments to prevent tput errors
@@ -238,7 +229,7 @@ print_ascii_banner() {
                                         ███    ███ 
                            
                             Extended Detection and Response
-                                   Version ${HARDN_VERSION}
+
                             by Security International Group
                                   
 EOF
