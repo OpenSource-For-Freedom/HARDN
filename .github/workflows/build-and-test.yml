@@ -238,6 +238,7 @@ jobs:
     permissions:
       security-events: write
       contents: read
+      actions: read
     
     steps:
     - uses: actions/checkout@v4
@@ -250,11 +251,49 @@ jobs:
         format: 'sarif'
         output: 'trivy-results.sarif'
     
+    - name: Validate SARIF file exists
+      run: |
+        if [ ! -f trivy-results.sarif ]; then
+          echo "SARIF file not found!"
+          exit 1
+        fi
+        echo "SARIF file found and validated"
+        
     - name: Upload Trivy scan results to GitHub Security tab
       uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
+      continue-on-error: true
+      
+    - name: Retry SARIF Upload on failure
+      if: failure()
+      run: |
+        MAX_RETRIES=3
+        RETRY_COUNT=0
+        
+        while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+          echo "Attempting SARIF upload retry $((RETRY_COUNT + 1))/$MAX_RETRIES..."
+          
+          if gh api \
+            --method POST \
+            --header "Accept: application/vnd.github+json" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/code-scanning/sarifs \
+            --input trivy-results.sarif; then
+            echo "SARIF upload successful on retry $((RETRY_COUNT + 1))"
+            exit 0
+          fi
+          
+          RETRY_COUNT=$((RETRY_COUNT + 1))
+          echo "Retry $RETRY_COUNT failed, waiting before next attempt..."
+          sleep 10
+        done
+        
+        echo "All retry attempts failed"
+        exit 1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   integration-test:
     runs-on: ubuntu-latest
