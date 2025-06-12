@@ -152,7 +152,7 @@ jobs:
     
     - name: Test in container
       run: |
-        docker run --rm -v $PWD:/workspace -w /workspace ${{ matrix.debian-version }} bash -c "
+        docker run --rm -v "$PWD":/workspace -w /workspace ${{ matrix.debian-version }} bash -c "
           set -e
           apt-get update
 
@@ -306,7 +306,7 @@ jobs:
           echo "Checking package contents..."
           dpkg -L hardn-xdr | grep bin/ || true
           echo "Checking PATH..."
-          echo $PATH
+          echo "$PATH"
           exit 1
         fi
 
@@ -371,7 +371,7 @@ jobs:
       id: version
       run: |
         VERSION=$(head -1 debian/changelog | sed 's/.*(\(.*\)).*/\1/')
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
     
     - name: Create Release
       id: create_release
