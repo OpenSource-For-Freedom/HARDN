@@ -45,19 +45,46 @@ install_hardn_package() {
     temp_dir=$(mktemp -d)
     cd "${temp_dir}"
     
-    # Try to download from GitHub releases first
+    # Try to download from GitHub releases first with retry logic
     local github_url="https://github.com/OpenSource-For-Freedom/HARDN/releases/download/v${HARDN_VERSION}/hardn-xdr_${HARDN_VERSION}-1_all.deb"
     
-    if curl -L -f "${github_url}" -o "hardn-xdr_${HARDN_VERSION}-1_all.deb"; then
-        echo "OK Downloaded HARDN-XDR package from GitHub releases"
-    else
-        echo "WARNING GitHub release not found, building from source..."
+    MAX_RETRIES=3
+    COUNT=0
+    DOWNLOADED=false
+    
+    while [ $COUNT -lt $MAX_RETRIES ]; do
+        if curl -L -f "${github_url}" -o "hardn-xdr_${HARDN_VERSION}-1_all.deb"; then
+            echo "OK Downloaded HARDN-XDR package from GitHub releases"
+            DOWNLOADED=true
+            break
+        fi
+        COUNT=$((COUNT+1))
+        echo "Retry $COUNT/$MAX_RETRIES: GitHub download failed, retrying in 5 seconds..."
+        sleep 5
+    done
+    
+    if [ "$DOWNLOADED" = false ]; then
+        echo "WARNING GitHub release not found after $MAX_RETRIES attempts, building from source..."
         
         # Install build dependencies
         apt install -y git debhelper-compat devscripts build-essential
         
-        # Clone repository and build package
-        git clone https://github.com/OpenSource-For-Freedom/HARDN.git
+        # Clone repository with retry logic
+        COUNT=0
+        while [ $COUNT -lt $MAX_RETRIES ]; do
+            if git clone https://github.com/OpenSource-For-Freedom/HARDN.git; then
+                break
+            fi
+            COUNT=$((COUNT+1))
+            echo "Retry $COUNT/$MAX_RETRIES: Git clone failed, retrying in 5 seconds..."
+            sleep 5
+        done
+        
+        if [ $COUNT -eq $MAX_RETRIES ]; then
+            echo "ERROR: Failed to clone repository after $MAX_RETRIES attempts."
+            exit 1
+        fi
+        
         cd HARDN
         dpkg-buildpackage -us -uc -b
         cd ..

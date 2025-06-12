@@ -18,6 +18,22 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Configure network access
+      run: |
+        # Ensure DNS resolution works properly
+        echo "nameserver 8.8.8.8" | sudo tee -a /etc/resolv.conf
+        echo "nameserver 1.1.1.1" | sudo tee -a /etc/resolv.conf
+        
+        # Test connectivity to GitHub
+        MAX_RETRIES=3
+        COUNT=0
+        while [ $COUNT -lt $MAX_RETRIES ]; do
+          ping -c 1 github.com && break
+          COUNT=$((COUNT+1))
+          echo "Retrying network connectivity test ($COUNT/$MAX_RETRIES)..."
+          sleep 5
+        done
+    
     - name: Install shellcheck
       run: |
         sudo apt-get update
@@ -55,8 +71,20 @@ jobs:
     
     - name: Install build dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y debhelper-compat devscripts build-essential
+        # Retry apt-get operations in case of network issues
+        MAX_RETRIES=3
+        COUNT=0
+        while [ $COUNT -lt $MAX_RETRIES ]; do
+          sudo apt-get update && sudo apt-get install -y debhelper-compat devscripts build-essential && break
+          COUNT=$((COUNT+1))
+          echo "Retrying apt-get install ($COUNT/$MAX_RETRIES)..."
+          sleep 5
+        done
+        
+        if [ $COUNT -eq $MAX_RETRIES ]; then
+          echo "Failed to install build dependencies after $MAX_RETRIES attempts."
+          exit 1
+        fi
     
     - name: Set up package structure
       run: |
@@ -127,6 +155,7 @@ jobs:
         docker run --rm -v $PWD:/workspace -w /workspace ${{ matrix.debian-version }} bash -c "
           set -e
           apt-get update
+
           
           # Install essential dependencies first to avoid package installation failures
           apt-get install -y \
@@ -174,6 +203,13 @@ jobs:
             dpkg -L hardn-xdr | grep bin/ || true
             echo 'Checking PATH...'
             echo \$PATH
+            exit 1
+          fi
+
+          
+          # Verify hardn command is available  
+          if ! command -v hardn &> /dev/null; then
+            echo 'hardn command not found after installation'
             exit 1
           fi
           
@@ -234,8 +270,26 @@ jobs:
         name: hardn-xdr-deb
         path: ./
     
+    - name: Install missing dependencies
+      run: |
+        # Retry apt-get operations in case of network issues
+        MAX_RETRIES=3
+        COUNT=0
+        while [ $COUNT -lt $MAX_RETRIES ]; do
+          sudo apt-get update && sudo apt-get install -y libpam-google-authenticator libpam-tmpdir libpam-pwquality firejail && break
+          COUNT=$((COUNT+1))
+          echo "Retrying dependency installation ($COUNT/$MAX_RETRIES)..."
+          sleep 5
+        done
+        
+        if [ $COUNT -eq $MAX_RETRIES ]; then
+          echo "Failed to install dependencies after $MAX_RETRIES attempts."
+          exit 1
+        fi
+        
     - name: Run comprehensive tests
       run: |
+
         set -e
         
         # Install the package and handle dependencies properly
@@ -255,6 +309,18 @@ jobs:
           echo $PATH
           exit 1
         fi
+
+        
+        # Verify hardn command is available
+        echo "Verifying hardn command availability..."
+        if ! command -v hardn &> /dev/null; then
+          echo "hardn command not found. Attempting reinstallation..."
+          sudo apt-get install --reinstall hardn-xdr
+          if ! command -v hardn &> /dev/null; then
+            echo "hardn command still not found. Exiting workflow."
+            exit 1
+          fi
+        fi
         
         # Test CLI functionality
         echo "Testing CLI commands..."
@@ -269,6 +335,12 @@ jobs:
         # Test systemd service
         echo "Testing systemd service..."
         sudo systemctl status hardn-monitor || echo "Service not active (may be expected)"
+        
+        # Handle php8.3-fpm.service timeout if it exists
+        if systemctl list-units --full -all | grep -q "php8.3-fmp.service"; then
+          echo "Restarting php8.3-fpm.service with increased timeout..."
+          sudo systemctl restart php8.3-fpm.service --timeout=300 || true
+        fi
         
         # Test dry-run hardening
         echo "Testing dry-run hardening..."

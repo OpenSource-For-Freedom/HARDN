@@ -21,9 +21,9 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Lynis security auditing tool and jq for JSON processing
+# Install Lynis security auditing tool, jq for JSON processing, and PAM dependencies
 RUN apt-get update && \
-    apt-get install -y lynis jq && \
+    apt-get install -y lynis jq libpam-google-authenticator libpam-tmpdir libpam-pwquality firejail && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
