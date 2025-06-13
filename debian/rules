@@ -7,6 +7,9 @@ override_dh_auto_install:
 	# Install main executable
 	install -D -m 755 usr/bin/hardn $(CURDIR)/debian/hardn-xdr/usr/bin/hardn
 	
+	# Create hardn-xdr symlink for compatibility
+	ln -sf hardn $(CURDIR)/debian/hardn-xdr/usr/bin/hardn-xdr
+	
 	# Install man page
 	install -D -m 644 hardn.1 $(CURDIR)/debian/hardn-xdr/usr/share/man/man1/hardn.1
 	

@@ -114,6 +114,11 @@ jobs:
           echo "ERROR: hardn binary not found in package!"
           exit 1
         }
+        echo "Checking if hardn-xdr symlink is included..."
+        dpkg-deb --contents hardn-xdr_*.deb | grep "usr/bin/hardn-xdr" || {
+          echo "ERROR: hardn-xdr symlink not found in package!"
+          exit 1
+        }
         echo "Package verification completed successfully"
     
     - name: Upload package artifact
@@ -146,63 +151,12 @@ jobs:
           set -e
           apt-get update
 
-          # Temporarily move apt-listbugs if present to avoid fatal errors
-          if [ -f /usr/bin/apt-listbugs ]; then
-            mv /usr/bin/apt-listbugs /usr/bin/apt-listbugs.bak
-          fi
-
-          # Create system groups and users if they don't exist (handle errors gracefully)
-          if ! getent group systemd-network >/dev/null 2>&1; then
-            groupadd -r systemd-network || echo \"Group systemd-network already exists\"
-          fi
-          if ! id -u systemd-network >/dev/null 2>&1; then
-            echo \"Creating systemd-network user...\"
-            useradd -r -M -s /bin/false -g systemd-network systemd-network || echo \"Failed to create systemd-network user\"
-          fi
-          if ! getent group systemd-journal >/dev/null 2>&1; then
-            groupadd -r systemd-journal || echo \"Group systemd-journal already exists\"
-          fi
-          
-          # Handle resolv.conf conflicts (handle errors gracefully)
-          if [[ -f /etc/resolv.conf && ! -L /etc/resolv.conf ]]; then
-            cp /etc/resolv.conf /tmp/resolv.conf-backup || echo \"Failed to back up /etc/resolv.conf\"
-          fi
-          if [[ -f /run/systemd/resolve/stub-resolv.conf ]]; then
-            ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf || echo \"Symlink creation failed\"
-          fi
-          
-          # Install essential dependencies first to avoid package installation failures
-          REQUIRED_PACKAGES=\"apparmor-utils apparmor-profiles apt-listchanges apt-listbugs git whiptail\"
-          for pkg in \$REQUIRED_PACKAGES; do
-            if ! dpkg -l | grep -q \"\$pkg\"; then
-              echo \"Installing missing dependency: \$pkg\"
-              apt-get install -y \"\$pkg\" || echo \"Failed to install \$pkg, continuing...\"
-            fi
-          done
-          
+          # Install essential dependencies that are now required
           apt-get install -y \\
-            software-properties-common \\
-            firejail \\
-            auditd \\
-            fail2ban \\
-            rkhunter \\
-            chkrootkit \\
-            lynis \\
-            rsyslog \\
-            logrotate \\
             ca-certificates \\
+            software-properties-common \\
             lsb-release \\
             gnupg \\
-            openssh-server \\
-            openssh-client \\
-            ufw \\
-            systemd-timesyncd \\
-            apparmor \\
-            apparmor-profiles \\
-            apparmor-utils \\
-            libpam-pwquality \\
-            libpam-google-authenticator \\
-            libpam-tmpdir \\
             curl \\
             wget \\
             lsof \\
@@ -211,34 +165,30 @@ jobs:
             git \\
             whiptail \\
             adduser || {
-              echo 'Some dependencies failed to install, trying package installation anyway...'
+              echo 'Some essential dependencies failed to install, trying package installation anyway...'
             }
           
-          # Install the HARDN-XDR package
+          # Install the HARDN-XDR package - should work without dependency issues
+          echo 'Installing HARDN-XDR package...'
           dpkg -i ./hardn-xdr_*.deb || {
-            echo 'Package installation failed, attempting to fix dependencies...'
-            apt-get install -f -y
+            echo 'Package installation failed unexpectedly'
+            exit 1
           }
-
-          # Restore apt-listbugs if we moved it earlier
-          if [ -f /usr/bin/apt-listbugs.bak ]; then
-            mv /usr/bin/apt-listbugs.bak /usr/bin/apt-listbugs
-          fi
           
           # Ensure PATH includes /usr/bin for the hardn binary
           export PATH=\$PATH:/usr/bin
           
-          # Verify hardn command exists with robust checking
+          # Verify both hardn and hardn-xdr commands exist
           if ! command -v hardn >/dev/null 2>&1; then
             echo 'ERROR: hardn command not found after installation'
-            echo 'Checking package contents...'
             dpkg -L hardn-xdr | grep bin/ || true
-            echo 'Checking PATH...'
-            echo \$PATH
-            if ! command -v hardn >/dev/null 2>&1; then
-              echo \"ERROR: hardn command still not found. Installation may have failed.\"
-              exit 1
-            fi
+            exit 1
+          fi
+
+          if ! command -v hardn-xdr >/dev/null 2>&1; then
+            echo 'ERROR: hardn-xdr command not found after installation'
+            dpkg -L hardn-xdr | grep bin/ || true
+            exit 1
           fi
 
           # Test basic functionality
@@ -246,10 +196,19 @@ jobs:
           hardn --version
           
           echo 'Testing hardn --help...'
-          hardn --help
+          hardn --help | head -10
+          
+          echo 'Testing hardn-xdr --version...'
+          hardn-xdr --version
+          
+          echo 'Testing hardn-xdr --help...'
+          hardn-xdr --help | head -10
           
           echo 'Testing hardn status...'
           hardn status || echo 'hardn status failed (expected if services not configured)'
+          
+          echo 'Testing hardn-xdr status...'
+          hardn-xdr status || echo 'hardn-xdr status failed (expected if services not configured)'
           
           echo 'Testing hardn setup --dry-run...'
           hardn setup --dry-run --non-interactive || echo 'hardn setup dry-run failed (may be expected)'
@@ -284,29 +243,42 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         VERSION="${{ steps.version.outputs.version }}"
+        
+        # Create a simple filename for easy wget
+        cp hardn-xdr_${VERSION}_all.deb hardn-xdr.deb
+        
         gh release create "v${VERSION}" \
           --title "HARDN-XDR v${VERSION}" \
           --notes "## HARDN-XDR v${VERSION}
           
           ### Changes
           - Refactored into modular architecture
-          - Added proper Debian packaging
-          - Implemented CLI interface
+          - Added proper Debian packaging with simplified dependencies
+          - Implemented CLI interface with hardn-xdr binary compatibility
           - Added comprehensive logging and error handling
           - Enhanced security compliance
           
-          ### Installation
+          ### Quick Installation
           \`\`\`bash
-          wget https://github.com/OpenSource-For-Freedom/HARDN/releases/download/v${VERSION}/hardn-xdr_${VERSION}_all.deb
-          sudo dpkg -i hardn-xdr_${VERSION}_all.deb
-          sudo apt-get install -f  # Fix any dependency issues
+          wget https://github.com/OpenSource-For-Freedom/HARDN/releases/download/v${VERSION}/hardn-xdr.deb
+          sudo dpkg -i hardn-xdr.deb
+          sudo hardn-xdr --help
+          \`\`\`
+          
+          ### Installation with Full Dependencies
+          \`\`\`bash
+          wget https://github.com/OpenSource-For-Freedom/HARDN/releases/download/v${VERSION}/hardn-xdr.deb
+          sudo dpkg -i hardn-xdr.deb
+          sudo apt-get install -f  # Install recommended security tools
           \`\`\`
           
           ### Usage
           \`\`\`bash
-          hardn setup              # Interactive system hardening
-          hardn audit              # Run security audit
-          hardn status             # Show system status
-          hardn --help             # Show all commands
-          \`\`\`" \
-          ./hardn-xdr_${VERSION}_all.deb
+          hardn-xdr setup              # Interactive system hardening
+          hardn-xdr audit              # Run security audit
+          hardn-xdr status             # Show system status
+          hardn-xdr --help             # Show all commands
+          \`\`\`
+          
+          **Note:** The package installs with essential dependencies only. Recommended security tools (fail2ban, aide, etc.) can be installed separately or via \`apt-get install -f\` for full functionality." \
+          ./hardn-xdr.deb ./hardn-xdr_${VERSION}_all.deb
