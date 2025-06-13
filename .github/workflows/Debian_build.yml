@@ -1,284 +1,40 @@
-name: Build HARDN-XDR
+name: Build and Deploy
 
 on:
   push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
-
-env:
-  DEBIAN_FRONTEND: noninteractive
+    branches: [ "main" ]
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    name: Code Quality and Linting
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Configure network access
-      run: |
-        echo "nameserver 8.8.8.8" | sudo tee -a /etc/resolv.conf
-        echo "nameserver 1.1.1.1" | sudo tee -a /etc/resolv.conf
-        MAX_RETRIES=3
-        COUNT=0
-        while [ $COUNT -lt $MAX_RETRIES ]; do
-          ping -c 1 github.com && break
-          COUNT=$((COUNT+1))
-          echo "Retrying network connectivity test ($COUNT/$MAX_RETRIES)..."
-          sleep 5
-        done
-    
-    - name: Install shellcheck
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y shellcheck
-    
-    - name: Lint shell scripts
-      run: |
-        find . -name "*.sh" -type f -exec shellcheck -S warning {} \;
-        shellcheck -S warning usr/bin/hardn
-    
-    - name: Check file permissions
-      run: |
-        test -x usr/bin/hardn
-        test -x debian/rules
-        test -x debian/postinst
-        test -x debian/postrm
-        
-    - name: Validate debian packaging
-      run: |
-        sudo apt-get install -y lintian
-        test -f debian/control
-        test -f debian/changelog  
-        test -f debian/copyright
-        test -f debian/rules
-
   build:
-    runs-on: ubuntu-latest
-    name: Build Debian Package
-    needs: lint
-    
+    runs-on: self-hosted
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install build dependencies
-      run: |
-        MAX_RETRIES=3
-        COUNT=0
-        while [ $COUNT -lt $MAX_RETRIES ]; do
-          sudo apt-get update && sudo apt-get install -y debhelper-compat devscripts build-essential && break
-          COUNT=$((COUNT+1))
-          echo "Retrying apt-get install ($COUNT/$MAX_RETRIES)..."
-          sleep 5
-        done
-        
-        if [ $COUNT -eq $MAX_RETRIES ]; then
-          echo "Failed to install build dependencies after $MAX_RETRIES attempts."
-          exit 1
-        fi
-    
-    - name: Set up package structure
-      run: |
-        mkdir -p debian/hardn-xdr/usr/bin
-        mkdir -p debian/hardn-xdr/usr/share/hardn/modules
-        mkdir -p debian/hardn-xdr/etc/hardn
-        mkdir -p debian/hardn-xdr/var/log/hardn
-        mkdir -p debian/hardn-xdr/lib/systemd/system
-    
-    - name: Update changelog with timestamp
-      run: |
-        sed -i "s/\$(date -R)/$(date -R)/" debian/changelog
-    
-    - name: Build package
-      run: |
-        dpkg-buildpackage -us -uc -b
-    
-    - name: Move package to current directory
-      run: |
-        mv ../hardn-xdr_*.deb ./
-    
-    - name: Check package with lintian
-      run: |
-        sudo apt-get install -y lintian
-        lintian hardn-xdr_*.deb || true
-    
-    - name: Verify package contents
-      run: |
-        echo "Verifying package contents..."
-        dpkg-deb --contents hardn-xdr_*.deb
-        echo "Checking if hardn binary is included..."
-        dpkg-deb --contents hardn-xdr_*.deb | grep "usr/bin/hardn" || {
-          echo "ERROR: hardn binary not found in package!"
-          exit 1
-        }
-        echo "Checking if hardn-xdr symlink is included..."
-        dpkg-deb --contents hardn-xdr_*.deb | grep "usr/bin/hardn-xdr" || {
-          echo "ERROR: hardn-xdr symlink not found in package!"
-          exit 1
-        }
-        echo "Package verification completed successfully"
-    
-    - name: Upload package artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: hardn-xdr-deb
-        path: hardn-xdr_*.deb
-
-  test:
-    runs-on: ubuntu-latest
-    name: Test Installation and Functionality
-    needs: build
-    
-    strategy:
-      matrix:
-        debian-version: ['debian:12', 'ubuntu:24.04']
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Download package artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: hardn-xdr-deb
-        path: ./
-    
-    - name: Test in container
-      run: |
-        docker run --rm -v "$PWD":/workspace -w /workspace ${{ matrix.debian-version }} bash -c "
-          set -e
-          apt-get update
-
-          # Install essential dependencies that are now required
-          apt-get install -y \\
-            ca-certificates \\
-            software-properties-common \\
-            lsb-release \\
-            gnupg \\
-            curl \\
-            wget \\
-            lsof \\
-            psmisc \\
-            procps \\
-            git \\
-            whiptail \\
-            adduser || {
-              echo 'Some essential dependencies failed to install, trying package installation anyway...'
-            }
-          
-          # Install the HARDN-XDR package - should work without dependency issues
-          echo 'Installing HARDN-XDR package...'
-          dpkg -i ./hardn-xdr_*.deb || {
-            echo 'Package installation failed unexpectedly'
-            exit 1
-          }
-          
-          # Ensure PATH includes /usr/bin for the hardn binary
-          export PATH=\$PATH:/usr/bin
-          
-          # Verify both hardn and hardn-xdr commands exist
-          if ! command -v hardn >/dev/null 2>&1; then
-            echo 'ERROR: hardn command not found after installation'
-            dpkg -L hardn-xdr | grep bin/ || true
-            exit 1
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4
+      - name: Version
+        run: |
+          export DEBEMAIL="github@github-runner.bpg";
+          export DEBFULLNAME="GitHub Runner";
+          gbp dch --snapshot --auto --snapshot-number=${GITHUB_RUN_NUMBER:-0} --git-log="HEAD" --ignore-branch;
+      - name: Build
+        run: |
+          debuild -uc -us
+          rc=$?
+          if [[ $rc -eq 0 ]]; then
+            status=OK
+            msg="$(ls ../hardn*.deb)"
+          else
+            status=NOK
+            msg="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           fi
-
-          if ! command -v hardn-xdr >/dev/null 2>&1; then
-            echo 'ERROR: hardn-xdr command not found after installation'
-            dpkg -L hardn-xdr | grep bin/ || true
-            exit 1
-          fi
-
-          # Test basic functionality
-          echo 'Testing hardn --version...'
-          hardn --version
-          
-          echo 'Testing hardn --help...'
-          hardn --help | head -10
-          
-          echo 'Testing hardn-xdr --version...'
-          hardn-xdr --version
-          
-          echo 'Testing hardn-xdr --help...'
-          hardn-xdr --help | head -10
-          
-          echo 'Testing hardn status...'
-          hardn status || echo 'hardn status failed (expected if services not configured)'
-          
-          echo 'Testing hardn-xdr status...'
-          hardn-xdr status || echo 'hardn-xdr status failed (expected if services not configured)'
-          
-          echo 'Testing hardn setup --dry-run...'
-          hardn setup --dry-run --non-interactive || echo 'hardn setup dry-run failed (may be expected)'
-          
-          echo 'Package installation and basic tests completed successfully'
-        "
-
-  release:
-    runs-on: ubuntu-latest
-    name: Create Release
-    needs: [lint, build, test]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Download package artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: hardn-xdr-deb
-        path: ./
-    
-    - name: Get version from changelog
-      id: version
-      run: |
-        VERSION=$(head -1 debian/changelog | sed 's/.*(\(.*\)).*/\1/')
-        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-    
-    - name: Create Release
-      id: create_release
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        VERSION="${{ steps.version.outputs.version }}"
-        
-        # Create a simple filename for easy wget
-        cp hardn-xdr_${VERSION}_all.deb hardn-xdr.deb
-        
-        gh release create "v${VERSION}" \
-          --title "HARDN-XDR v${VERSION}" \
-          --notes "## HARDN-XDR v${VERSION}
-          
-          ### Changes
-          - Refactored into modular architecture
-          - Added proper Debian packaging with simplified dependencies
-          - Implemented CLI interface with hardn-xdr binary compatibility
-          - Added comprehensive logging and error handling
-          - Enhanced security compliance
-          
-          ### Quick Installation
-          \`\`\`bash
-          wget https://github.com/OpenSource-For-Freedom/HARDN/releases/download/v${VERSION}/hardn-xdr.deb
-          sudo dpkg -i hardn-xdr.deb
-          sudo hardn-xdr --help
-          \`\`\`
-          
-          ### Installation with Full Dependencies
-          \`\`\`bash
-          wget https://github.com/OpenSource-For-Freedom/HARDN/releases/download/v${VERSION}/hardn-xdr.deb
-          sudo dpkg -i hardn-xdr.deb
-          sudo apt-get install -f  # Install recommended security tools
-          \`\`\`
-          
-          ### Usage
-          \`\`\`bash
-          hardn-xdr setup              # Interactive system hardening
-          hardn-xdr audit              # Run security audit
-          hardn-xdr status             # Show system status
-          hardn-xdr --help             # Show all commands
-          \`\`\`
-          
-          **Note:** The package installs with essential dependencies only. Recommended security tools (fail2ban, aide, etc.) can be installed separately or via \`apt-get install -f\` for full functionality." \
-          ./hardn-xdr.deb ./hardn-xdr_${VERSION}_all.deb
+          hardn-discord.sh "$status" "$msg"
+      - name: Deploy
+        if: success()
+        run: |
+          scp ../hardn*.deb webgateway:debs-hardn
+          ssh webgateway "aptly repo add hardn debs-hardn"
+          ssh webgateway "aptly publish update bookworm filesystem:web-hardn:"
+      - name: Clean
+        if: always()
+        run: |
+          debuild -- clean
+          rm ../hardn*
