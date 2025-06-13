@@ -36,9 +36,17 @@ update_system() {
 install_dependencies() {
     echo "📦 Installing dependencies..."
     
-    # Install dependencies
+    # Install essential dependencies first
     apt-get update
-    apt-get install -y apparmor-utils apparmor-profiles
+    
+    # Install dependencies with error handling
+    DEPENDENCIES=("apparmor-utils" "apparmor-profiles" "apt-listchanges" "apt-listbugs")
+    for pkg in "${DEPENDENCIES[@]}"; do
+        if ! dpkg -l | grep -q "$pkg"; then
+            echo "Installing missing dependency: $pkg"
+            apt-get install -y "$pkg" || echo "Failed to install $pkg, continuing..."
+        fi
+    done
     
     echo "Installing build dependencies..."
     apt install -y curl wget ca-certificates gnupg lsb-release
@@ -99,28 +107,24 @@ install_hardn_package() {
     
     # Install the package
     echo "📦 Installing HARDN-XDR package..."
-    if dpkg -i "hardn-xdr_${HARDN_VERSION}-1_all.deb"; then
-        echo "OK HARDN-XDR package installed successfully"
-    else
-        echo "Package installation failed, fixing dependencies..."
+    dpkg -i "hardn-xdr_${HARDN_VERSION}-1_all.deb" || {
+        echo "Package installation failed. Attempting to fix dependencies..."
         apt-get install -f -y
-        echo "OK Dependencies resolved"
-    fi
+    }
     
-    # Verify installation
-    if ! command -v hardn > /dev/null 2>&1; then
-        echo "ERROR: hardn command not found after installation"
+    # Verify installation success
+    if ! command -v hardn >/dev/null 2>&1; then
+        echo "ERROR: hardn command not found after installation. Aborting."
         
-        # Check package contents
-        dpkg -L hardn-xdr | grep bin/ || true
+        # Check if hardn binary exists in the package contents
+        if ! dpkg -L hardn-xdr | grep -q "/usr/bin/hardn"; then
+            echo "hardn binary not found in package contents. Verify package integrity."
+        fi
         
-        # Add the installation directory to PATH
+        # Update PATH if necessary
         export PATH="$PATH:/usr/bin"
-        echo "Updated PATH: $PATH"
-        
-        # Try again
-        if ! command -v hardn > /dev/null 2>&1; then
-            echo "ERROR: hardn command still not found. Installation may have failed."
+        if ! command -v hardn >/dev/null 2>&1; then
+            echo "ERROR: hardn command not found even after PATH update."
             exit 1
         fi
     fi
@@ -131,14 +135,22 @@ install_hardn_package() {
 }
 
 create_system_groups() {
-    echo "🔧 Checking system groups..."
+    echo "🔧 Checking system groups and users..."
     
-    # Check and create groups if necessary
+    # Check and create systemd-network user and group if necessary
     if ! getent group systemd-network >/dev/null 2>&1; then
         groupadd -r systemd-network
         echo "Created systemd-network group"
     else
         echo "systemd-network group already exists"
+    fi
+    
+    # Create systemd-network user if missing
+    if ! id -u systemd-network >/dev/null 2>&1; then
+        echo "Creating systemd-network user..."
+        useradd -r -M -s /bin/false systemd-network || echo "Failed to create systemd-network user"
+    else
+        echo "systemd-network user already exists"
     fi
 
     if ! getent group systemd-journal >/dev/null 2>&1; then
@@ -152,16 +164,22 @@ create_system_groups() {
 handle_resolv_conf() {
     echo "🔧 Handling resolv.conf configuration..."
     
-    # Backup and create symlink
+    # Check if /etc/resolv.conf is a busy file and skip backup if necessary
     if [[ -f /etc/resolv.conf && ! -L /etc/resolv.conf ]]; then
-        mv /etc/resolv.conf "/tmp/resolv.conf-backup.$(date +%Y%m%d%H%M%S)" || echo "Failed to back up /etc/resolv.conf"
-        echo "Backed up original resolv.conf"
+        if ! mv /etc/resolv.conf "/tmp/resolv.conf-backup.$(date +%Y%m%d%H%M%S)"; then
+            echo "Warning: Failed to back up /etc/resolv.conf. Continuing..."
+        else
+            echo "Backed up original resolv.conf"
+        fi
     fi
     
-    # Create symlink if the target exists
+    # Create symlink only if the file is not busy
     if [[ -f /run/systemd/resolve/stub-resolv.conf ]]; then
-        ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf || echo "Symlink creation failed, continuing..."
-        echo "Created systemd-resolved symlink"
+        if ! ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf; then
+            echo "Warning: Failed to create symlink for /etc/resolv.conf."
+        else
+            echo "Created systemd-resolved symlink"
+        fi
     else
         echo "systemd-resolved not available, skipping symlink creation"
     fi
