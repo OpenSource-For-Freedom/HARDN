@@ -68,7 +68,7 @@
 - **File Integrity**: AIDE implementation, immutable configurations
 - **Expected Lynis Score**: 90%+ (target compliance threshold)
 
-## 🚀 Usage Instructions
+## Usage Instructions
 
 ### Local Testing
 ```bash
@@ -118,7 +118,7 @@ The implementation provides:
 
 This implementation successfully meets all requirements for achieving "Full Lynis compliance" with a score of 90% or more through automated, containerized testing on Debian systems.
 
-## 🏆 Success Criteria Met
+## Success Criteria Met
 
 **Clone HARDN-XDR code** → Complete integration accomplished  
 **Test for failures** → Comprehensive testing framework implemented  

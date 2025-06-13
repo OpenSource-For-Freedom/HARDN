@@ -250,11 +250,8 @@ EOF
 }
 
 setup_security(){
-    # OS detection is done by detect_os_details() 
-    # global variables CURRENT_DEBIAN_VERSION_ID and CURRENT_DEBIAN_CODENAME are available.
     HARDN_STATUS "pass" "Using detected system: Debian ${CURRENT_DEBIAN_VERSION_ID} (${CURRENT_DEBIAN_CODENAME}) for security setup."
 
- ####################### DELETED FILES
     HARDN_STATUS "info" "Checking for deleted files in use..."
     if command -v lsof >/dev/null 2>&1; then
         deleted_files=$(lsof +L1 | awk '{print $9}' | grep -v '^$')
@@ -269,7 +266,6 @@ setup_security(){
         HARDN_STATUS "error" "lsof command not found. Cannot check for deleted files in use."
     fi
     
-################################## ntp daemon
     HARDN_STATUS "info" "Setting up NTP daemon..."
 
     local ntp_servers="0.debian.pool.ntp.org 1.debian.pool.ntp.org 2.debian.pool.ntp.org 3.debian.pool.ntp.org"

@@ -137,7 +137,7 @@ This document summarizes the complete refactoring of HARDN-XDR from a monolithic
 | **Testing** | Manual only | Automated CI/CD pipeline | Continuous validation |
 | **Maintenance** | Difficult | Modular and maintainable | Sustainable |
 
-## 🏗️ Architecture Breakdown
+## Architecture Breakdown
 
 ### Core Modules
 
@@ -176,7 +176,7 @@ This document summarizes the complete refactoring of HARDN-XDR from a monolithic
 - Access control implementation
 - Service minimization
 
-## 🚀 Deployment & Usage
+## Deployment & Usage
 
 ### Installation Methods
 

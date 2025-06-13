@@ -25,7 +25,7 @@ check_system() {
 }
 
 update_system() {
-    echo "📦 Updating system packages..."
+    echo "Updating system packages..."
     if apt update && apt upgrade -y; then
         echo "OK System updated successfully"
     else
@@ -34,7 +34,7 @@ update_system() {
 }
 
 install_dependencies() {
-    echo "📦 Installing dependencies..."
+    echo "Installing dependencies..."
     
     # Install essential dependencies first
     apt-get update
@@ -106,7 +106,7 @@ install_hardn_package() {
     fi
     
     # Install the package
-    echo "📦 Installing HARDN-XDR package..."
+    echo "Installing HARDN-XDR package..."
     dpkg -i "hardn-xdr_${HARDN_VERSION}-1_all.deb" || {
         echo "Package installation failed. Attempting to fix dependencies..."
         apt-get install -f -y
@@ -135,7 +135,7 @@ install_hardn_package() {
 }
 
 create_system_groups() {
-    echo "🔧 Checking system groups and users..."
+    echo "Checking system groups and users..."
     
     # Check and create systemd-network user and group if necessary
     if ! getent group systemd-network >/dev/null 2>&1; then
@@ -162,7 +162,7 @@ create_system_groups() {
 }
 
 handle_resolv_conf() {
-    echo "🔧 Handling resolv.conf configuration..."
+    echo "Handling resolv.conf configuration..."
     
     # Check if /etc/resolv.conf is a busy file and skip backup if necessary
     if [[ -f /etc/resolv.conf && ! -L /etc/resolv.conf ]]; then
