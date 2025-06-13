@@ -156,11 +156,15 @@ jobs:
           set -e
           apt-get update
 
-          # Create system groups if they don't exist
-          getent group systemd-network || groupadd -r systemd-network
-          getent group systemd-journal || groupadd -r systemd-journal
+          # Create system groups if they don't exist (handle errors gracefully)
+          if ! getent group systemd-network >/dev/null 2>&1; then
+            groupadd -r systemd-network || echo \"Group systemd-network already exists\"
+          fi
+          if ! getent group systemd-journal >/dev/null 2>&1; then
+            groupadd -r systemd-journal || echo \"Group systemd-journal already exists\"
+          fi
           
-          # Handle resolv.conf conflicts
+          # Handle resolv.conf conflicts (handle errors gracefully)
           if [[ -f /etc/resolv.conf && ! -L /etc/resolv.conf ]]; then
             mv /etc/resolv.conf /tmp/resolv.conf-backup || echo \"Failed to back up /etc/resolv.conf\"
           fi
@@ -169,36 +173,46 @@ jobs:
           fi
           
           # Install essential dependencies first to avoid package installation failures
-          apt-get install -y \
-            software-properties-common \
-            firejail \
-            auditd \
-            fail2ban \
-            rkhunter \
-            chkrootkit \
-            lynis \
-            rsyslog \
-            logrotate \
-            ca-certificates \
-            lsb-release \
-            gnupg \
-            openssh-server \
-            openssh-client \
-            ufw \
-            systemd-timesyncd \
-            apparmor \
-            apparmor-profiles \
-            apparmor-utils \
-            libpam-pwquality \
-            libpam-google-authenticator \
-            libpam-tmpdir \
-            curl \
-            wget \
-            lsof \
-            psmisc \
-            procps \
-            git \
-            whiptail \
+          # Use a more robust approach with individual package installation
+          REQUIRED_PACKAGES=\"apparmor-utils apparmor-profiles\"
+          for pkg in \$REQUIRED_PACKAGES; do
+            if ! dpkg -l | grep -q \"\$pkg\"; then
+              echo \"Installing missing dependency: \$pkg\"
+              apt-get install -y \"\$pkg\" || echo \"Failed to install \$pkg, continuing...\"
+            fi
+          done
+          
+          # Install other dependencies with error handling
+          apt-get install -y \\
+            software-properties-common \\
+            firejail \\
+            auditd \\
+            fail2ban \\
+            rkhunter \\
+            chkrootkit \\
+            lynis \\
+            rsyslog \\
+            logrotate \\
+            ca-certificates \\
+            lsb-release \\
+            gnupg \\
+            openssh-server \\
+            openssh-client \\
+            ufw \\
+            systemd-timesyncd \\
+            apparmor \\
+            apparmor-profiles \\
+            apparmor-utils \\
+            libpam-pwquality \\
+            libpam-google-authenticator \\
+            libpam-tmpdir \\
+            curl \\
+            wget \\
+            lsof \\
+            psmisc \\
+            procps \\
+            git \\
+            whiptail \\
             adduser || {
               echo 'Some dependencies failed to install, trying package installation anyway...'
             }
@@ -209,14 +223,23 @@ jobs:
             apt-get install -f -y
           }
           
-          # Verify hardn command exists before testing
+          # Verify hardn command exists with robust checking (matching install.sh logic)
           if ! command -v hardn >/dev/null 2>&1; then
             echo 'ERROR: hardn command not found after installation'
             echo 'Checking package contents...'
             dpkg -L hardn-xdr | grep bin/ || true
             echo 'Checking PATH...'
             echo \$PATH
-            exit 1
+            
+            # Add the installation directory to PATH and try again
+            export PATH=\"\$PATH:/usr/bin\"
+            echo \"Updated PATH: \$PATH\"
+            
+            # Try again after PATH update
+            if ! command -v hardn >/dev/null 2>&1; then
+              echo \"ERROR: hardn command still not found. Installation may have failed.\"
+              exit 1
+            fi
           fi
 
           
@@ -324,6 +347,15 @@ jobs:
     
     - name: Install missing dependencies
       run: |
+        # Install essential dependencies first (matching install.sh approach)
+        REQUIRED_PACKAGES=(apparmor-utils apparmor-profiles)
+        for pkg in "${REQUIRED_PACKAGES[@]}"; do
+          if ! dpkg -l | grep -q "$pkg"; then
+            echo "Installing missing dependency: $pkg"
+            sudo apt-get install -y "$pkg" || echo "Failed to install $pkg, continuing..."
+          fi
+        done
+        
         # Retry apt-get operations in case of network issues
         MAX_RETRIES=3
         COUNT=0
@@ -339,10 +371,20 @@ jobs:
           exit 1
         fi
         
-    - name: Create missing groups
+    - name: Create missing groups with proper error handling
       run: |
-        sudo groupadd -r systemd-network || echo "Group systemd-network already exists"
-        sudo groupadd -r systemd-journal || echo "Group systemd-journal already exists"
+        # Check and create groups if necessary (matching install.sh logic)
+        if ! getent group systemd-network >/dev/null 2>&1; then
+          sudo groupadd -r systemd-network || echo "Group systemd-network already exists"
+        else
+          echo "systemd-network group already exists"
+        fi
+        
+        if ! getent group systemd-journal >/dev/null 2>&1; then
+          sudo groupadd -r systemd-journal || echo "Group systemd-journal already exists"
+        else
+          echo "systemd-journal group already exists"
+        fi
         
     - name: Handle resolv.conf conflict
       run: |
@@ -367,28 +409,25 @@ jobs:
           sudo apt-get install -f -y
         }
         
-        # Verify hardn command exists before proceeding with tests
+        # Verify hardn command exists with robust checking (matching install.sh logic)
         if ! command -v hardn >/dev/null 2>&1; then
           echo "ERROR: hardn command not found after installation"
           echo "Checking package contents..."
           dpkg -L hardn-xdr | grep bin/ || true
           echo "Checking PATH..."
           echo "$PATH"
-          exit 1
-        fi
-
-        
-        # Verify hardn command is available
-        echo "Verifying hardn command availability..."
-        if ! command -v hardn &> /dev/null; then
-          echo "hardn command not found. Attempting reinstallation..."
-          sudo apt-get install --reinstall hardn-xdr
-          if ! command -v hardn &> /dev/null; then
-            echo "hardn command still not found. Exiting workflow."
+          
+          # Add the installation directory to PATH and try again
+          export PATH="$PATH:/usr/bin" 
+          echo "Updated PATH: $PATH"
+          
+          # Try again after PATH update
+          if ! command -v hardn >/dev/null 2>&1; then
+            echo "ERROR: hardn command still not found. Installation may have failed."
             exit 1
           fi
         fi
-        
+
         # Test CLI functionality
         echo "Testing CLI commands..."
         hardn --version
