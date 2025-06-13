@@ -131,6 +131,9 @@ HARDN-XDR/
 
 ## Build Process
 
+> 📖 **For detailed build documentation, see [docs/build-process.md](docs/build-process.md)**  
+> **Quick Answer**: Docker files are NOT needed for dpkg build - they're only used for testing.
+
 HARDN-XDR uses an automated CI/CD pipeline with comprehensive testing and quality assurance:
 
 ```mermaid

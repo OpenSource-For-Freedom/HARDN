@@ -12,6 +12,7 @@
 ### Implementation & Development
 - [Implementation Summary](implementation-summary.md) - Project implementation overview
 - [Refactoring Summary](refactoring-summary.md) - Complete refactoring documentation
+- [Build Process](build-process.md) - Build system and Docker usage explanation
 - [API Documentation](api.md) - API reference and endpoints
 - [System Checks](checks.md) - Available system security checks
 
@@ -48,6 +49,7 @@
 
 ### For Developers
 - [Implementation Summary](implementation-summary.md) - Architecture overview
+- [Build Process](build-process.md) - Build system documentation
 - [API Documentation](api.md) - API integration
 - [Code of Conduct](CODE_OF_CONDUCT.md) - Contributing guidelines
 
