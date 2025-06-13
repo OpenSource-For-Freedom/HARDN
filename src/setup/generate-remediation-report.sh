@@ -446,7 +446,7 @@ EOF
     $(if [ "$status" = "PASS" ]; then echo '"success"'; else echo '"remediation"'; fi),
     "$(echo "$environment" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')"
   ],
-  "assignees": ["copilot"],
+  "assignees": [],
   "milestone": null,
   "metadata": {
     "hardn_version": "2.0.0",
