@@ -156,6 +156,17 @@ jobs:
           set -e
           apt-get update
 
+          # Create system groups if they don't exist
+          getent group systemd-network || groupadd -r systemd-network
+          getent group systemd-journal || groupadd -r systemd-journal
+          
+          # Handle resolv.conf conflicts
+          if [[ -f /etc/resolv.conf && ! -L /etc/resolv.conf ]]; then
+            mv /etc/resolv.conf /tmp/resolv.conf-backup || echo \"Failed to back up /etc/resolv.conf\"
+          fi
+          if [[ -f /run/systemd/resolve/stub-resolv.conf ]]; then
+            ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf || echo \"Symlink creation failed\"
+          fi
           
           # Install essential dependencies first to avoid package installation failures
           apt-get install -y \
