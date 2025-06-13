@@ -57,14 +57,7 @@ sudo dpkg -i hardn-xdr_2.0.0-1_all.deb
 sudo apt-get install -f
 ```
 
-#### 2. Quick Install Script
-
-```bash
-curl -LO https://raw.githubusercontent.com/OpenSource-For-Freedom/HARDN/main/install.sh
-sudo ./install.sh
-```
-
-#### 3. Build from Source
+#### 2. Build from Source
 
 ```bash
 git clone https://github.com/OpenSource-For-Freedom/HARDN.git
@@ -131,7 +124,7 @@ HARDN-XDR/
 
 ## Build Process
 
-> 📖 **For detailed build documentation, see [docs/build-process.md](docs/build-process.md)**  
+> **For detailed build documentation, see [docs/build-process.md](docs/build-process.md)**  
 > **Quick Answer**: Docker files are NOT needed for dpkg build - they're only used for testing.
 
 HARDN-XDR uses an automated CI/CD pipeline with comprehensive testing and quality assurance:
