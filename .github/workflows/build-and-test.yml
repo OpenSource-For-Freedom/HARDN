@@ -156,9 +156,13 @@ jobs:
           set -e
           apt-get update
 
-          # Create system groups if they don't exist (handle errors gracefully)
+          # Create system groups and users if they don't exist (handle errors gracefully)
           if ! getent group systemd-network >/dev/null 2>&1; then
             groupadd -r systemd-network || echo \"Group systemd-network already exists\"
+          fi
+          if ! id -u systemd-network >/dev/null 2>&1; then
+            echo \"Creating systemd-network user...\"
+            useradd -r -M -s /bin/false systemd-network || echo \"Failed to create systemd-network user\"
           fi
           if ! getent group systemd-journal >/dev/null 2>&1; then
             groupadd -r systemd-journal || echo \"Group systemd-journal already exists\"
@@ -174,7 +178,7 @@ jobs:
           
           # Install essential dependencies first to avoid package installation failures
           # Use a more robust approach with individual package installation
-          REQUIRED_PACKAGES=\"apparmor-utils apparmor-profiles\"
+          REQUIRED_PACKAGES=\"apparmor-utils apparmor-profiles apt-listchanges apt-listbugs\"
           for pkg in \$REQUIRED_PACKAGES; do
             if ! dpkg -l | grep -q \"\$pkg\"; then
               echo \"Installing missing dependency: \$pkg\"
@@ -348,7 +352,7 @@ jobs:
     - name: Install missing dependencies
       run: |
         # Install essential dependencies first (matching install.sh approach)
-        REQUIRED_PACKAGES=(apparmor-utils apparmor-profiles)
+        REQUIRED_PACKAGES=(apparmor-utils apparmor-profiles apt-listchanges apt-listbugs)
         for pkg in "${REQUIRED_PACKAGES[@]}"; do
           if ! dpkg -l | grep -q "$pkg"; then
             echo "Installing missing dependency: $pkg"
@@ -371,13 +375,20 @@ jobs:
           exit 1
         fi
         
-    - name: Create missing groups with proper error handling
+    - name: Create missing groups and users with proper error handling
       run: |
-        # Check and create groups if necessary (matching install.sh logic)
+        # Check and create groups and users if necessary (matching install.sh logic)
         if ! getent group systemd-network >/dev/null 2>&1; then
           sudo groupadd -r systemd-network || echo "Group systemd-network already exists"
         else
           echo "systemd-network group already exists"
+        fi
+        
+        if ! id -u systemd-network >/dev/null 2>&1; then
+          echo "Creating systemd-network user..."
+          sudo useradd -r -M -s /bin/false systemd-network || echo "Failed to create systemd-network user"
+        else
+          echo "systemd-network user already exists"
         fi
         
         if ! getent group systemd-journal >/dev/null 2>&1; then
