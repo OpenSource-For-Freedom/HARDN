@@ -30,8 +30,12 @@ case "$1" in
         fi
         
         # Enable systemd services
-        systemctl daemon-reload
-        systemctl enable hardn-monitor.service
+        if command -v systemctl >/dev/null 2>&1; then
+            systemctl daemon-reload
+            systemctl enable hardn-monitor.service
+        else
+            echo "systemctl not available, skipping service configuration"
+        fi
         
         echo "HARDN-XDR has been installed successfully."
         echo "Run 'hardn --help' for usage information."
