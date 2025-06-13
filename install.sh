@@ -34,6 +34,12 @@ update_system() {
 }
 
 install_dependencies() {
+    echo "📦 Installing dependencies..."
+    
+    # Install dependencies
+    apt-get update
+    apt-get install -y apparmor-utils apparmor-profiles
+    
     echo "Installing build dependencies..."
     apt install -y curl wget ca-certificates gnupg lsb-release
 }
@@ -96,14 +102,69 @@ install_hardn_package() {
     if dpkg -i "hardn-xdr_${HARDN_VERSION}-1_all.deb"; then
         echo "OK HARDN-XDR package installed successfully"
     else
-        echo "Fixing dependency issues..."
+        echo "Package installation failed, fixing dependencies..."
         apt-get install -f -y
         echo "OK Dependencies resolved"
+    fi
+    
+    # Verify installation
+    if ! command -v hardn > /dev/null 2>&1; then
+        echo "ERROR: hardn command not found after installation"
+        
+        # Check package contents
+        dpkg -L hardn-xdr | grep bin/ || true
+        
+        # Add the installation directory to PATH
+        export PATH="$PATH:/usr/bin"
+        echo "Updated PATH: $PATH"
+        
+        # Try again
+        if ! command -v hardn > /dev/null 2>&1; then
+            echo "ERROR: hardn command still not found. Installation may have failed."
+            exit 1
+        fi
     fi
     
     # Clean up
     cd /
     rm -rf "${temp_dir}"
+}
+
+create_system_groups() {
+    echo "🔧 Checking system groups..."
+    
+    # Check and create groups if necessary
+    if ! getent group systemd-network >/dev/null 2>&1; then
+        groupadd -r systemd-network
+        echo "Created systemd-network group"
+    else
+        echo "systemd-network group already exists"
+    fi
+
+    if ! getent group systemd-journal >/dev/null 2>&1; then
+        groupadd -r systemd-journal  
+        echo "Created systemd-journal group"
+    else
+        echo "systemd-journal group already exists"
+    fi
+}
+
+handle_resolv_conf() {
+    echo "🔧 Handling resolv.conf configuration..."
+    
+    # Backup and create symlink
+    if [[ -f /etc/resolv.conf && ! -L /etc/resolv.conf ]]; then
+        mv /etc/resolv.conf "/tmp/resolv.conf-backup.$(date +%Y%m%d%H%M%S)" || echo "Failed to back up /etc/resolv.conf"
+        echo "Backed up original resolv.conf"
+    fi
+    
+    # Create symlink if the target exists
+    if [[ -f /run/systemd/resolve/stub-resolv.conf ]]; then
+        ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf || echo "Symlink creation failed, continuing..."
+        echo "Created systemd-resolved symlink"
+    else
+        echo "systemd-resolved not available, skipping symlink creation"
+    fi
 }
 
 show_completion() {
@@ -140,6 +201,8 @@ main() {
     check_root
     check_system
     update_system
+    create_system_groups
+    handle_resolv_conf
     install_dependencies
     install_hardn_package
     show_completion
