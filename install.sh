@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # HARDN-XDR Installation Script
-# Updated for Debian package installation
-# Author: Christopher Bingham
+# Debian package installation
+
 
 set -e
 
@@ -53,7 +53,7 @@ install_dependencies() {
 }
 
 install_hardn_package() {
-    echo "🔽 Downloading and installing HARDN-XDR package..."
+    echo "Downloading and installing HARDN-XDR package..."
     
     local temp_dir
     temp_dir=$(mktemp -d)
@@ -213,7 +213,7 @@ EOF
 }
 
 main() {
-    echo "🔒 HARDN-XDR v${HARDN_VERSION} Installation Script"
+    echo "HARDN-XDR v${HARDN_VERSION} Installation Script"
     echo "=============================================="
     
     check_root
