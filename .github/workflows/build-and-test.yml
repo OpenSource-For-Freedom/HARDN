@@ -1,4 +1,4 @@
-name: Build and Test HARDN-XDR
+name: Build HARDN-XDR
 
 on:
   push:
