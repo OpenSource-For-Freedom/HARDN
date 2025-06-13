@@ -1,7 +1,7 @@
 Source: hardn-xdr
 Section: admin
 Priority: optional
-Maintainer: Christopher Bingham <office@cybersynapse.ro>
+Maintainer: Matei B. <office@cybersynapse.ro>
 Build-Depends: debhelper-compat (= 13)
 Standards-Version: 4.6.2
 Homepage: https://github.com/OpenSource-For-Freedom/HARDN
