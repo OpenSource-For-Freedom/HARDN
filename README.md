@@ -34,17 +34,44 @@ HARDN-XDR is a robust endpoint security and hardening solution for Debian-based 
 
 ## Installation
 
-### Quick Start
-
-```bash
-curl -LO https://raw.githubusercontent.com/opensource-for-freedom/HARDN-XDR/refs/heads/main/install.sh && sudo chmod +x install.sh && sudo ./install.sh
-```
-
 ### Requirements
 
 - **Debian 12** or **Ubuntu 24.04** (bare-metal or virtual machines)
 - Root or sudo access for installation
 - Internet connection for package downloads
+
+### Installation Methods
+
+#### 1. Debian Package (Recommended)
+
+Download and install the latest .deb package:
+
+```bash
+# Download the latest release
+wget https://github.com/OpenSource-For-Freedom/HARDN/releases/latest/download/hardn-xdr_2.0.0-1_all.deb
+
+# Install the package
+sudo dpkg -i hardn-xdr_2.0.0-1_all.deb
+
+# Fix any dependency issues
+sudo apt-get install -f
+```
+
+#### 2. Quick Install Script
+
+```bash
+curl -LO https://raw.githubusercontent.com/OpenSource-For-Freedom/HARDN/main/install.sh
+sudo ./install.sh
+```
+
+#### 3. Build from Source
+
+```bash
+git clone https://github.com/OpenSource-For-Freedom/HARDN.git
+cd HARDN
+dpkg-buildpackage -us -uc -b
+sudo dpkg -i ../hardn-xdr_*.deb
+```
 
 ### What Gets Installed
 
@@ -52,6 +79,9 @@ curl -LO https://raw.githubusercontent.com/opensource-for-freedom/HARDN-XDR/refs
 - System hardening and STIG compliance settings  
 - Malware detection and signature-based response system
 - Comprehensive monitoring and reporting tools
+- Native `.deb` package with proper dependency management
+- Systemd service integration
+- FHS-compliant directory structure
 
 For detailed information, see [HARDN.md](docs/HARDN.md) and [deb_stig.md](docs/deb_stig.md).
 
@@ -99,6 +129,81 @@ HARDN-XDR/
 └── README.md                    
 ```
 
+## Build Process
+
+HARDN-XDR uses an automated CI/CD pipeline with comprehensive testing and quality assurance:
+
+```mermaid
+graph TD
+    A[Source Code Push] --> B[Lint Stage]
+    B --> B1[ShellCheck Validation]
+    B --> B2[File Permissions Check]
+    B --> B3[Debian Package Validation]
+    
+    B1 --> C[Build Stage]
+    B2 --> C
+    B3 --> C
+    
+    C --> C1[Install Build Dependencies]
+    C --> C2[Set up Package Structure]
+    C --> C3[Build Debian Package]
+    C --> C4[Package Content Verification]
+    
+    C1 --> D[Test Stage]
+    C2 --> D
+    C3 --> D
+    C4 --> D
+    
+    D --> D1[Container Testing - Debian 12]
+    D --> D2[Container Testing - Ubuntu 24.04]
+    D --> D3[Package Installation Tests]
+    D --> D4[CLI Functionality Tests]
+    
+    D1 --> E[Security Scan]
+    D2 --> E
+    D3 --> E
+    D4 --> E
+    
+    E --> E1[Trivy Vulnerability Scan]
+    E --> E2[SARIF Report Generation]
+    E --> E3[GitHub Security Tab Upload]
+    
+    E1 --> F[Integration Tests]
+    E2 --> F
+    E3 --> F
+    
+    F --> F1[Full Package Installation]
+    F --> F2[System Hardening Tests]
+    F --> F3[Service Functionality Tests]
+    F --> F4[Configuration Validation]
+    
+    F1 --> G[Release Stage]
+    F2 --> G
+    F3 --> G
+    F4 --> G
+    
+    G --> G1[Version Extraction]
+    G --> G2[GitHub Release Creation]
+    G --> G3[Package Artifact Upload]
+    
+    style A fill:#e1f5fe
+    style G3 fill:#c8e6c9
+    style E1 fill:#fff3e0
+    style D1 fill:#f3e5f5
+    style D2 fill:#f3e5f5
+    classDef testStage fill:#e8f5e8
+    class D1,D2,D3,D4,F1,F2,F3,F4 testStage
+```
+
+### Build Stages Explained
+
+1. **Lint Stage**: Code quality validation using ShellCheck, file permission verification, and Debian packaging structure validation
+2. **Build Stage**: Debian package compilation with proper dependency management and FHS compliance
+3. **Test Stage**: Multi-distribution testing in containerized environments (Debian 12, Ubuntu 24.04)
+4. **Security Scan**: Vulnerability assessment using Trivy with automated security reporting
+5. **Integration Tests**: End-to-end functionality testing with real system installation
+6. **Release Stage**: Automated GitHub releases with versioned artifacts for production deployment
+
 ## Usage
 
 ### Command Line Interface
@@ -122,19 +227,45 @@ hardn monitor start
 Launch the native GTK dashboard for graphical monitoring and management:
 
 ```bash
-# Launch dashboard (requires GUI environment)
+# Basic launch
 hardn dashboard
 
-# Or run with full privileges for service control
+# Launch with full privileges (recommended for service control)
 sudo hardn dashboard
+
+# Direct execution
+hardn-dashboard
 ```
 
-The dashboard provides:
-- Real-time system metrics with live graphs
-- Security services status and control buttons
-- Kernel parameter monitoring
-- Security log viewing  
-- System status overview
+#### Dashboard Features
+
+**Real-time Monitoring:**
+- **System Metrics**: Live graphs showing CPU, memory, disk, and network usage
+- **Security Services**: Status monitoring for UFW, Fail2Ban, AppArmor, ClamAV, SSH, and more  
+- **Kernel Parameters**: Display of critical security-related sysctl values
+- **System Information**: Hostname, uptime, and load average
+
+**Security Management:**
+- **Service Control**: Enable/disable security services with graphical buttons
+- **Live Logs**: Real-time viewing of authentication and security logs
+- **Status Dashboard**: Comprehensive overview of system hardening status
+
+**Interface Layout:**
+- **Left Panel**: Security services list, control buttons, and kernel parameters
+- **Right Panel**: Real-time system metrics graphs and security log viewer
+- **Header**: System information and status bar with operation feedback
+
+**Design**: Professional dark theme with Debian-inspired color scheme (slate grey, black, and red) optimized for extended monitoring sessions.
+
+#### Prerequisites
+
+The GUI dashboard requires a desktop environment and additional Python packages:
+
+```bash
+sudo apt install python3-gi python3-gi-cairo python3-matplotlib python3-psutil python3-requests gir1.2-gtk-3.0
+```
+
+These dependencies are automatically installed when using the standard HARDN-XDR installation methods.
 
 ### REST API
 
