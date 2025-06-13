@@ -159,6 +159,8 @@ jobs:
           
           # Install essential dependencies first to avoid package installation failures
           apt-get install -y \
+            software-properties-common \
+            firejail \
             auditd \
             fail2ban \
             rkhunter \
@@ -315,7 +317,7 @@ jobs:
         MAX_RETRIES=3
         COUNT=0
         while [ $COUNT -lt $MAX_RETRIES ]; do
-          sudo apt-get update && sudo apt-get install -y libpam-google-authenticator libpam-tmpdir libpam-pwquality firejail && break
+          sudo apt-get update && sudo apt-get install -y software-properties-common firejail libpam-google-authenticator libpam-tmpdir libpam-pwquality && break
           COUNT=$((COUNT+1))
           echo "Retrying dependency installation ($COUNT/$MAX_RETRIES)..."
           sleep 5
@@ -325,6 +327,21 @@ jobs:
           echo "Failed to install dependencies after $MAX_RETRIES attempts."
           exit 1
         fi
+        
+    - name: Create missing groups
+      run: |
+        sudo groupadd -r systemd-network || echo "Group systemd-network already exists"
+        sudo groupadd -r systemd-journal || echo "Group systemd-journal already exists"
+        
+    - name: Handle resolv.conf conflict
+      run: |
+        sudo mv /etc/resolv.conf /tmp/resolv.conf-backup || echo "Failed to back up /etc/resolv.conf"
+        sudo ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf || echo "Symlink creation failed"
+        
+    - name: Suppress Python syntax warnings
+      run: |
+        export PYTHONWARNINGS="ignore"
+        echo "PYTHONWARNINGS=ignore" | sudo tee -a /etc/environment
         
     - name: Run comprehensive tests
       run: |
