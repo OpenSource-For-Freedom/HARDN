@@ -1,0 +1,93 @@
+#!/bin/bash
+
+# HARDN-XDR API Server Launcher
+# Launches the REST API server for HARDN-XDR
+
+set -euo pipefail
+
+# Constants
+readonly HARDN_GUI_DIR="${HARDN_DATA_DIR:-/usr/share/hardn}/gui"
+readonly API_SCRIPT="${HARDN_GUI_DIR}/hardn-api.py"
+
+# Check if API script exists
+if [[ ! -f "${API_SCRIPT}" ]]; then
+    echo "Error: API script not found at ${API_SCRIPT}"
+    echo "Please ensure HARDN-XDR is properly installed."
+    exit 1
+fi
+
+# Check for required Python packages
+check_python_deps() {
+    local deps=("psutil")
+    local missing=()
+    
+    for dep in "${deps[@]}"; do
+        if ! python3 -c "import ${dep}" 2>/dev/null; then
+            missing+=("python3-${dep}")
+        fi
+    done
+    
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        echo "Error: Missing required Python packages:"
+        printf " - %s\n" "${missing[@]}"
+        echo ""
+        echo "Install them with:"
+        echo "  sudo apt install ${missing[*]}"
+        exit 1
+    fi
+}
+
+# Main function
+main() {
+    echo "Starting HARDN-XDR API Server..."
+    
+    # Check dependencies
+    check_python_deps
+    
+    # Launch the API server
+    exec python3 "${API_SCRIPT}" "$@"
+}
+
+# Handle command line arguments
+case "${1:-}" in
+    --help|-h)
+        cat << EOF
+HARDN-XDR API Server Launcher
+
+USAGE:
+    hardn-api [OPTIONS]
+
+OPTIONS:
+    --host HOST       Host to bind to (default: 127.0.0.1)
+    --port PORT       Port to bind to (default: 8080)
+    --verbose, -v     Verbose logging
+    -h, --help        Show this help message
+
+DESCRIPTION:
+    Launches the REST API server for HARDN-XDR security monitoring.
+    The API provides endpoints for:
+    
+    - System status information
+    - Security services management
+    - System metrics data
+    - Security logs access
+    - Kernel parameter monitoring
+    
+    Run with sudo for service control functionality.
+
+EXAMPLES:
+    hardn-api                        # Start API server on localhost:8080
+    hardn-api --port 9090            # Start on port 9090
+    sudo hardn-api --host 0.0.0.0    # Start with full privileges, all interfaces
+
+EOF
+        exit 0
+        ;;
+    --version)
+        echo "HARDN-XDR API Server v${HARDN_VERSION:-2.0.0}"
+        exit 0
+        ;;
+    *)
+        main "$@"
+        ;;
+esac

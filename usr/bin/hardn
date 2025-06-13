@@ -55,6 +55,8 @@ COMMANDS:
     restore             Restore from backup
     monitor             Start/stop monitoring services
     update              Update security configurations
+    dashboard           Launch GTK dashboard interface
+    api                 Start REST API server
     uninstall           Remove HARDN-XDR hardening (requires confirmation)
 
 OPTIONS:
@@ -73,6 +75,8 @@ EXAMPLES:
     hardn status                   # Check hardening status
     hardn backup                   # Create configuration backup
     hardn monitor start            # Start monitoring services
+    hardn dashboard                # Launch GUI dashboard
+    hardn api --port 8080          # Start REST API server
 
 For detailed documentation, visit:
 https://github.com/OpenSource-For-Freedom/HARDN
@@ -252,6 +256,38 @@ cmd_update() {
     update_security_configs "$@"
 }
 
+cmd_dashboard() {
+    log_info "Launching HARDN-XDR Dashboard..."
+    
+    local dashboard_launcher="${HARDN_DATA_DIR}/../bin/hardn-dashboard"
+    
+    # Check if dashboard launcher exists
+    if [[ ! -f "${dashboard_launcher}" ]]; then
+        log_error "Dashboard launcher not found at ${dashboard_launcher}"
+        log_info "Please ensure HARDN-XDR GUI components are properly installed."
+        exit 1
+    fi
+    
+    # Execute the dashboard launcher
+    exec "${dashboard_launcher}" "$@"
+}
+
+cmd_api() {
+    log_info "Starting HARDN-XDR API Server..."
+    
+    local api_launcher="${HARDN_DATA_DIR}/../bin/hardn-api"
+    
+    # Check if API launcher exists
+    if [[ ! -f "${api_launcher}" ]]; then
+        log_error "API launcher not found at ${api_launcher}"
+        log_info "Please ensure HARDN-XDR API components are properly installed."
+        exit 1
+    fi
+    
+    # Execute the API launcher
+    exec "${api_launcher}" "$@"
+}
+
 cmd_uninstall() {
     log_warn "Uninstalling HARDN-XDR hardening..."
     
@@ -317,7 +353,7 @@ main() {
                 export DRY_RUN
                 shift
                 ;;
-            setup|audit|status|backup|restore|monitor|update|uninstall)
+            setup|audit|status|backup|restore|monitor|update|dashboard|api|uninstall)
                 command="$1"
                 shift
                 break
@@ -361,6 +397,12 @@ main() {
             ;;
         update)
             cmd_update "$@"
+            ;;
+        dashboard)
+            cmd_dashboard "$@"
+            ;;
+        api)
+            cmd_api "$@"
             ;;
         uninstall)
             cmd_uninstall "$@"
