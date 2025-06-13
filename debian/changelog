@@ -11,4 +11,4 @@ hardn-xdr (2.0.0-1) bookworm; urgency=medium
   * Added comprehensive documentation
   * Created automated packaging and testing workflows
 
- -- Christopher Bingham <office@cybersynapse.ro>  Tue, 10 Jun 2025 20:12:21 +0000
+ -- Tim <office@cybersynapse.ro>  Tue, 10 Jun 2025 20:12:21 +0000
