@@ -10,19 +10,7 @@ Vcs-Browser: https://github.com/OpenSource-For-Freedom/HARDN
 
 Package: hardn-xdr
 Architecture: all
-Depends: ${misc:Depends},
- ca-certificates,
- software-properties-common,
- lsb-release,
- gnupg,
- curl,
- wget,
- lsof,
- psmisc,
- procps,
- git,
- whiptail,
- adduser
+Depends: ${misc:Depends}
 Recommends: nmap,
  auditd,
  audispd-plugins,
@@ -45,6 +33,10 @@ Recommends: nmap,
  apt-listchanges,
  apt-listbugs,
  unattended-upgrades,
+ ca-certificates,
+ software-properties-common,
+ lsb-release,
+ gnupg,
  openssh-server,
  openssh-client,
  ufw,
@@ -55,7 +47,15 @@ Recommends: nmap,
  firejail,
  libpam-pwquality,
  libpam-google-authenticator,
- libpam-tmpdir
+ libpam-tmpdir,
+ curl,
+ wget,
+ lsof,
+ psmisc,
+ procps,
+ git,
+ whiptail,
+ adduser
 Description: Linux Security Hardening Extended Detection and Response
  HARDN-XDR is a comprehensive security hardening solution for Debian-based
  Linux distributions. It implements STIG (Security Technical Implementation
