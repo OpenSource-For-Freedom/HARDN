@@ -28,6 +28,8 @@ HARDN-XDR is a robust endpoint security and hardening solution for Debian-based 
 - **Scalability**: Supports small to large-scale network deployments  
 - **STIG Compliance**: Government-grade security for Debian-based information systems
 - **Modular Architecture**: Professional CLI interface with specialized security modules
+- **GTK Dashboard**: Native GUI dashboard for monitoring and management
+- **REST API**: HTTP API for integration and remote monitoring
 
 
 ## Installation
@@ -96,6 +98,62 @@ HARDN-XDR/
 ├── install.sh                   
 └── README.md                    
 ```
+
+## Usage
+
+### Command Line Interface
+
+```bash
+# System hardening
+sudo hardn setup
+
+# Check system status  
+hardn status
+
+# Run security audit
+hardn audit
+
+# Monitor services
+hardn monitor start
+```
+
+### GUI Dashboard
+
+Launch the native GTK dashboard for graphical monitoring and management:
+
+```bash
+# Launch dashboard (requires GUI environment)
+hardn dashboard
+
+# Or run with full privileges for service control
+sudo hardn dashboard
+```
+
+The dashboard provides:
+- Real-time system metrics with live graphs
+- Security services status and control buttons
+- Kernel parameter monitoring
+- Security log viewing  
+- System status overview
+
+### REST API
+
+Start the HTTP API server for remote monitoring and integration:
+
+```bash
+# Start API server on localhost:8080
+hardn api
+
+# Start on custom port with full privileges
+sudo hardn api --port 9090 --host 0.0.0.0
+```
+
+API endpoints:
+- `GET /api/status` - System status information
+- `GET /api/services` - Security services status
+- `GET /api/metrics` - Live system metrics
+- `GET /api/logs` - Security logs
+- `POST /api/service` - Control services
 
 ## License
 

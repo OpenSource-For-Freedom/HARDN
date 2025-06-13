@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=HARDN-XDR Dashboard
+Comment=Security monitoring and management dashboard for HARDN-XDR
+GenericName=Security Dashboard
+Exec=/usr/bin/hardn-dashboard
+Icon=security-high
+Terminal=false
+StartupNotify=true
+Categories=System;Security;Monitor;
+Keywords=security;monitoring;firewall;system;hardening;
+StartupWMClass=hardn-dashboard
