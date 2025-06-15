@@ -471,7 +471,7 @@ EOF
             HARDN_STATUS "warning" "Interface $interface is in promiscuous mode. Review Interface."
         fi
     done
-    # Create comprehensive blacklist file for network protocols
+    # Create blacklist file for network protocols
     cat > /etc/modprobe.d/blacklist-rare-network.conf << 'EOF'
 # HARDN-XDR Blacklist for Rare/Unused Network Protocols
 # Disabled for compliance and attack surface reduction
@@ -2219,7 +2219,7 @@ pen_test() {
     mkdir -p /var/log/nmap
     chmod 750 /var/log/nmap
     
-    # Run comprehensive nmap scan
+    # Run nmap scan
     nmap -sS -sV -O -p- localhost > /var/log/nmap/hardn-localhost-scan.log 2>&1 &
     local nmap_pid=$!
     
