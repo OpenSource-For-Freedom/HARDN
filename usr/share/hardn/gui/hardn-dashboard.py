@@ -6,7 +6,8 @@ A GTK-based GUI dashboard for HARDN-XDR security monitoring and management.
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GObject, GLib, Pango
+gi.require_version('GdkPixbuf', '2.0')
+from gi.repository import Gtk, GObject, GLib, Pango, GdkPixbuf
 import subprocess
 import json
 import time
@@ -26,6 +27,8 @@ import signal
 HARDN_MODULES_DIR = "/usr/share/hardn/modules"
 HARDN_LOG_DIR = "/var/log/hardn"
 HARDN_CONFIG_DIR = "/etc/hardn"
+HARDN_GUI_DIR = "/usr/share/hardn/gui"
+HARDN_LOGO_PATH = os.path.join(HARDN_GUI_DIR, "HARDN.png")
 
 # Debian color scheme
 COLORS = {
@@ -45,6 +48,21 @@ class HardnDashboard:
         self.running = True
         self.update_interval = 5000  # 5 seconds
         self.start_monitoring()
+    
+    def load_logo(self, size=None):
+        """Load the HARDN logo, optionally scaled to a specific size"""
+        try:
+            if os.path.exists(HARDN_LOGO_PATH):
+                pixbuf = GdkPixbuf.Pixbuf.new_from_file(HARDN_LOGO_PATH)
+                if size:
+                    pixbuf = pixbuf.scale_simple(size, size, GdkPixbuf.InterpType.BILINEAR)
+                return pixbuf
+            else:
+                print(f"Warning: Logo file not found at {HARDN_LOGO_PATH}")
+                return None
+        except Exception as e:
+            print(f"Error loading logo: {e}")
+            return None
         
     def setup_ui(self):
         """Set up the main UI"""
@@ -53,6 +71,11 @@ class HardnDashboard:
         self.window.set_default_size(1200, 800)
         self.window.set_position(Gtk.WindowPosition.CENTER)
         self.window.connect("delete-event", self.on_delete_event)
+        
+        # Set window icon
+        logo_icon = self.load_logo(size=32)
+        if logo_icon:
+            self.window.set_icon(logo_icon)
         
         # Apply dark theme
         self.apply_theme()
@@ -171,7 +194,13 @@ class HardnDashboard:
         # System info
         self.system_info_label = Gtk.Label()
         self.update_system_info()
-        header_box.pack_start(self.system_info_label, False, False, 0)
+        header_box.pack_start(self.system_info_label, False, False, 10)
+        
+        # Logo in top right corner
+        logo_pixbuf = self.load_logo(size=48)
+        if logo_pixbuf:
+            logo_image = Gtk.Image.new_from_pixbuf(logo_pixbuf)
+            header_box.pack_start(logo_image, False, False, 0)
         
         return header_box
         
