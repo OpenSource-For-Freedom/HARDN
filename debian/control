@@ -55,7 +55,13 @@ Recommends: nmap,
  procps,
  git,
  whiptail,
- adduser
+ adduser,
+ python3-gi,
+ python3-gi-cairo,
+ python3-matplotlib,
+ python3-psutil,
+ python3-requests,
+ gir1.2-gtk-3.0
 Description: Linux Security Hardening Extended Detection and Response
  HARDN-XDR is a comprehensive security hardening solution for Debian-based
  Linux distributions. It implements STIG (Security Technical Implementation
