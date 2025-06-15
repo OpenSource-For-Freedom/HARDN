@@ -2,7 +2,7 @@
 
 ## Final Release 
 
-HARDN-XDR v2.0.0 is a comprehensive security hardening solution designed for Debian-based systems. This release provides complete security compliance, advanced threat detection, and enterprise-level protection features.
+HARDN-XDR v2.0.0 is a security hardening solution designed for Debian-based systems. This release provides security compliance, threat detection, and protection features.
 
 
 ## Packages Installed:
@@ -69,7 +69,7 @@ HARDN-XDR v2.0.0 is a comprehensive security hardening solution designed for Deb
 
 ## Malware and Signature Detection and Response
 
-By leveraging **AIDE**, **Linux Malware Detect (LMD)**, and **YARA rules** together, the system provides comprehensive malware detection and response capabilities. This integrated approach enables both signature-based and heuristic detection, allowing for early identification of threats and rapid response. Regular scans and rule updates ensure that new and evolving malware patterns are recognized, supporting an effective extended detection and response (XDR) strategy.
+By using **AIDE**, **Linux Malware Detect (LMD)**, and **YARA rules** together, the system provides malware detection and response capabilities. This integrated approach enables both signature-based and heuristic detection, allowing for early identification of threats and rapid response. Regular scans and rule updates ensure that new and evolving malware patterns are recognized, supporting an effective extended detection and response (XDR) strategy.
 
 ## Monitoring & Reporting:
 - Alerts and validation logs written to `/var/log/security/alerts.log` and `/var/log/security/validation.log`
