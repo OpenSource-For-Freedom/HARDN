@@ -5,41 +5,41 @@
 
 override_dh_auto_install:
 	# Install main executable
-	install -D -m 755 usr/bin/hardn $(CURDIR)/debian/hardn-xdr/usr/bin/hardn
+	install -D -m 755 usr/bin/hardn $(CURDIR)/debian/hardn/usr/bin/hardn
 	
-	# Create hardn-xdr symlink for compatibility
-	ln -sf hardn $(CURDIR)/debian/hardn-xdr/usr/bin/hardn-xdr
-	
-	# Install GUI launcher scripts
-	install -D -m 755 usr/bin/hardn-dashboard $(CURDIR)/debian/hardn-xdr/usr/bin/hardn-dashboard
-	install -D -m 755 usr/bin/hardn-api $(CURDIR)/debian/hardn-xdr/usr/bin/hardn-api
+	# Install API launcher script
+	install -D -m 755 usr/bin/hardn-api $(CURDIR)/debian/hardn/usr/bin/hardn-api
 	
 	# Install man page
-	install -D -m 644 hardn.1 $(CURDIR)/debian/hardn-xdr/usr/share/man/man1/hardn.1
+	install -D -m 644 hardn.1 $(CURDIR)/debian/hardn/usr/share/man/man1/hardn.1
 	
 	# Install modules
-	install -d $(CURDIR)/debian/hardn-xdr/usr/share/hardn/modules
-	install -m 644 usr/share/hardn/modules/*.sh $(CURDIR)/debian/hardn-xdr/usr/share/hardn/modules/
-	
-	# Install GUI components
-	install -d $(CURDIR)/debian/hardn-xdr/usr/share/hardn/gui
-	install -m 755 usr/share/hardn/gui/*.py $(CURDIR)/debian/hardn-xdr/usr/share/hardn/gui/
+	install -d $(CURDIR)/debian/hardn/usr/share/hardn/modules
+	install -m 644 usr/share/hardn/modules/*.sh $(CURDIR)/debian/hardn/usr/share/hardn/modules/
 	
 	# Install configuration templates
-	install -d $(CURDIR)/debian/hardn-xdr/usr/share/hardn/templates
-	install -m 644 usr/share/hardn/templates/* $(CURDIR)/debian/hardn-xdr/usr/share/hardn/templates/
+	install -d $(CURDIR)/debian/hardn/usr/share/hardn/templates
+	install -m 644 usr/share/hardn/templates/* $(CURDIR)/debian/hardn/usr/share/hardn/templates/
+	
+	# Install API script
+	install -m 755 usr/share/hardn/hardn-api.py $(CURDIR)/debian/hardn/usr/share/hardn/
+	
+	# Install tools directory
+	install -d $(CURDIR)/debian/hardn/usr/share/hardn/tools
+	cp -r usr/share/hardn/tools/* $(CURDIR)/debian/hardn/usr/share/hardn/tools/
+	find $(CURDIR)/debian/hardn/usr/share/hardn/tools -name "*.sh" -exec chmod 755 {} \;
 	
 	# Install documentation
-	install -d $(CURDIR)/debian/hardn-xdr/usr/share/doc/hardn-xdr
-	install -m 644 docs/*.md $(CURDIR)/debian/hardn-xdr/usr/share/doc/hardn-xdr/ || true
-	install -m 644 README.md $(CURDIR)/debian/hardn-xdr/usr/share/doc/hardn-xdr/
-	install -m 644 docs/changelog.md $(CURDIR)/debian/hardn-xdr/usr/share/doc/hardn-xdr/
+	install -d $(CURDIR)/debian/hardn/usr/share/doc/hardn
+	install -m 644 docs/*.md $(CURDIR)/debian/hardn/usr/share/doc/hardn/ || true
+	install -m 644 README.md $(CURDIR)/debian/hardn/usr/share/doc/hardn/
+	install -m 644 docs/changelog.md $(CURDIR)/debian/hardn/usr/share/doc/hardn/
 	
 	# Install systemd service files
-	install -d $(CURDIR)/debian/hardn-xdr/lib/systemd/system
-	install -m 644 systemd/*.service $(CURDIR)/debian/hardn-xdr/lib/systemd/system/
+	install -d $(CURDIR)/debian/hardn/lib/systemd/system
+	install -m 644 systemd/*.service $(CURDIR)/debian/hardn/lib/systemd/system/
 	
 	# Create directories
-	install -d $(CURDIR)/debian/hardn-xdr/etc/hardn
-	install -d $(CURDIR)/debian/hardn-xdr/var/log/hardn
-	install -d $(CURDIR)/debian/hardn-xdr/var/lib/hardn/backups
+	install -d $(CURDIR)/debian/hardn/etc/hardn
+	install -d $(CURDIR)/debian/hardn/var/log/hardn
+	install -d $(CURDIR)/debian/hardn/var/lib/hardn/backups

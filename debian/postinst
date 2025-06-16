@@ -37,7 +37,7 @@ case "$1" in
             echo "systemctl not available, skipping service configuration"
         fi
         
-        echo "HARDN-XDR has been installed successfully."
+        echo "HARDN has been installed successfully."
         echo "Run 'hardn --help' for usage information."
         echo "Run 'hardn setup' to perform initial system hardening."
         ;;

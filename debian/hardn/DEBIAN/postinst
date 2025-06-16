@@ -1,0 +1,86 @@
+#!/bin/bash
+
+set -e
+
+case "$1" in
+    configure)
+        # Create hardn user if it doesn't exist
+        if ! getent passwd hardn >/dev/null; then
+            adduser --system --group --home /var/lib/hardn --shell /bin/false hardn
+        fi
+        
+        # Set proper permissions on directories
+        chown -R hardn:hardn /var/log/hardn
+        chmod 750 /var/log/hardn
+        
+        # Set permissions on configuration files
+        chown root:hardn /etc/hardn
+        chmod 750 /etc/hardn
+        
+        # Create backup directory
+        mkdir -p /var/lib/hardn/backups
+        chown hardn:hardn /var/lib/hardn/backups
+        chmod 750 /var/lib/hardn/backups
+        
+        # Initialize configuration if first install
+        if [ ! -f /etc/hardn/hardn.conf ]; then
+            cp /usr/share/hardn/templates/hardn.conf /etc/hardn/
+            chown root:hardn /etc/hardn/hardn.conf
+            chmod 640 /etc/hardn/hardn.conf
+        fi
+        
+        # Enable systemd services
+        if command -v systemctl >/dev/null 2>&1; then
+            systemctl daemon-reload
+            systemctl enable hardn-monitor.service
+        else
+            echo "systemctl not available, skipping service configuration"
+        fi
+        
+        echo "HARDN has been installed successfully."
+        echo "Run 'hardn --help' for usage information."
+        echo "Run 'hardn setup' to perform initial system hardening."
+        ;;
+    
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+    
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+# Automatically added by dh_installsystemd/13.11.4
+if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
+	# The following line should be removed in trixie or trixie+1
+	deb-systemd-helper unmask 'hardn-monitor.service' >/dev/null || true
+
+	# was-enabled defaults to true, so new installations run enable.
+	if deb-systemd-helper --quiet was-enabled 'hardn-monitor.service'; then
+		# Enables the unit on first installation, creates new
+		# symlinks on upgrades if the unit file has changed.
+		deb-systemd-helper enable 'hardn-monitor.service' >/dev/null || true
+	else
+		# Update the statefile to add new symlinks (if any), which need to be
+		# cleaned up on purge. Also remove old symlinks.
+		deb-systemd-helper update-state 'hardn-monitor.service' >/dev/null || true
+	fi
+fi
+# End automatically added section
+# Automatically added by dh_installsystemd/13.11.4
+if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
+	if [ -d /run/systemd/system ]; then
+		systemctl --system daemon-reload >/dev/null || true
+		if [ -n "$2" ]; then
+			_dh_action=restart
+		else
+			_dh_action=start
+		fi
+		deb-systemd-invoke $_dh_action 'hardn-monitor.service' >/dev/null || true
+	fi
+fi
+# End automatically added section
+
+
+exit 0

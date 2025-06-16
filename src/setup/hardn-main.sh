@@ -41,7 +41,7 @@ detect_os_details() {
 detect_os_details
 
 show_system_info() {
-    echo "HARDN-XDR v${HARDN_VERSION} - System Information"
+    echo "HARDN v${HARDN_VERSION} - System Information"
     echo "================================================"
     echo "Script Version: ${HARDN_VERSION}"
     echo "Target OS: Debian-based systems (Debian 12+, Ubuntu 24.04+)"
@@ -56,33 +56,20 @@ show_system_info() {
 welcomemsg() {
     echo ""
     echo ""
-    echo "HARDN-XDR v${HARDN_VERSION} - Linux Security Hardening Sentinel"
+    echo "HARDN v${HARDN_VERSION} - Linux Security Hardening Sentinel"
     echo "================================================================"
     
-    if [ "$NON_INTERACTIVE_MODE" = false ]; then
-        whiptail --title "HARDN-XDR v${HARDN_VERSION}" --msgbox "Welcome to HARDN-XDR v${HARDN_VERSION} - A Debian Security tool for System Hardening\n\nThis will apply STIG compliance, security tools, and system hardening." 12 70
-        echo ""
-        echo "This installer will update your system first..."
-        if whiptail --title "HARDN-XDR v${HARDN_VERSION}" --yesno "Do you want to continue with the installation?" 10 60; then
-            true  
-        else
-            echo "Installation cancelled by user."
-            exit 1
-        fi
-    else
-        HARDN_STATUS "info" "Running in non-interactive mode - skipping user prompts"
-        echo "This installer will update your system first..."
-        HARDN_STATUS "info" "Proceeding with automatic installation..."
-    fi
+    HARDN_STATUS "info" "Welcome to HARDN v${HARDN_VERSION} - A Debian Security tool for System Hardening"
+    HARDN_STATUS "info" "This will apply STIG compliance, security tools, and system hardening."
+    echo ""
+    echo "This installer will update your system first..."
+    HARDN_STATUS "info" "Proceeding with installation..."
 }
 
 preinstallmsg() {
     echo ""
-    if [ "$NON_INTERACTIVE_MODE" = false ]; then
-        whiptail --title "HARDN-XDR" --msgbox "Welcome to HARDN-XDR. A Linux Security Hardening program." 10 60
-    fi
+    HARDN_STATUS "info" "Welcome to HARDN. A Linux Security Hardening program."
     echo "The system will be configured to ensure STIG and Security compliance."
-   
 }
 
 update_system_packages() {
@@ -357,7 +344,7 @@ setup_security(){
                 temp_ntp_conf=$(mktemp)
                 grep -vE "^\s*(pool|server)\s+" "$ntp_conf" > "$temp_ntp_conf"
                 {
-                    echo "# HARDN-XDR configured NTP servers"
+                    echo "# HARDN configured NTP servers"
                     for server in $ntp_servers; do
                         echo "pool $server iburst"
                     done
@@ -408,7 +395,7 @@ setup_security(){
     
     # Create USB storage blacklist configuration
     cat > /etc/modprobe.d/blacklist-usb-storage.conf << 'EOF'
-# HARDN-XDR USB Security Configuration
+# HARDN USB Security Configuration
 # Block USB storage devices while allowing keyboards and mice
 blacklist usb-storage
 blacklist uas          # Block USB Attached SCSI (another storage protocol)
@@ -473,7 +460,7 @@ EOF
     done
     # Create blacklist file for network protocols
     cat > /etc/modprobe.d/blacklist-rare-network.conf << 'EOF'
-# HARDN-XDR Blacklist for Rare/Unused Network Protocols
+# HARDN Blacklist for Rare/Unused Network Protocols
 # Disabled for compliance and attack surface reduction
 
 # TIPC (Transparent Inter-Process Communication)
@@ -791,8 +778,8 @@ EOF
             HARDN_STATUS "pass" "Backed up existing audit rules to $audit_rules_file.bak."
         fi
         cat > "$audit_rules_file" << 'EOF'
-# HARDN-XDR STIG Compliance Configuration
-# This file is managed by HARDN-XDR for security compliance.
+# HARDN STIG Compliance Configuration
+# This file is managed by HARDN for security compliance.
 # 
 # Note: This configuration has been optimized to reduce system impact while
 # maintaining essential security monitoring. Removed overly strict rules that
@@ -1401,7 +1388,7 @@ disable_binfmt_misc() {
             HARDN_STATUS "info" "Modprobe rule to disable binfmt_misc already exists in $modprobe_conf."
         fi
     fi
-    whiptail_infobox "Non-native binary format support (binfmt_misc) checked/disabled."
+    HARDN_STATUS "info" "Non-native binary format support (binfmt_misc) checked/disabled."
 }
 
 disable_firewire_drivers() {
@@ -1441,9 +1428,9 @@ disable_firewire_drivers() {
     done
 
     if [[ "$changed" -eq 1 ]]; then
-        whiptail_infobox "FireWire drivers checked. Unloaded and/or blacklisted where applicable."
+        HARDN_STATUS "info" "FireWire drivers checked. Unloaded and/or blacklisted where applicable."
     else
-        whiptail_infobox "FireWire drivers checked. No changes made (likely already disabled/not present)."
+        HARDN_STATUS "info" "FireWire drivers checked. No changes made (likely already disabled/not present)."
     fi
     
 }
@@ -1457,11 +1444,8 @@ purge_old_packages() {
         HARDN_STATUS "info" "Found the following packages with leftover configuration files to purge:"
         echo "$packages_to_purge"
        
-        if [ "$NON_INTERACTIVE_MODE" = false ] && command -v whiptail >/dev/null; then
-            whiptail --title "Packages to Purge" --msgbox "The following packages have leftover configuration files that will be purged:\n\n$packages_to_purge" 15 70
-        elif [ "$NON_INTERACTIVE_MODE" = true ]; then
-            HARDN_STATUS "info" "Purging leftover configuration files for: $packages_to_purge"
-        fi
+        HARDN_STATUS "info" "The following packages have leftover configuration files that will be purged:"
+        HARDN_STATUS "info" "$packages_to_purge"
 
         for pkg in $packages_to_purge; do
             HARDN_STATUS "error" "Purging $pkg..."
@@ -1476,16 +1460,16 @@ purge_old_packages() {
                 fi
             fi
         done
-        whiptail_infobox "Purged configuration files for removed packages."
+        HARDN_STATUS "info" "Purged configuration files for removed packages."
     else
         HARDN_STATUS "pass" "No old/removed packages with leftover configuration files found to purge."
-        whiptail_infobox "No leftover package configurations to purge."
+        HARDN_STATUS "info" "No leftover package configurations to purge."
     fi
    
     HARDN_STATUS "error" "Running apt-get autoremove and clean to free up space..."
     apt-get autoremove -y
     apt-get clean
-    whiptail_infobox "Apt cache cleaned."
+    HARDN_STATUS "info" "Apt cache cleaned."
 }
 
 # ENABLE NAME SERVERS FUNCTION: Let user decide DNS, but place recommendation. ADD TO /DOCS
@@ -1502,25 +1486,11 @@ enable_nameservers() {
         ["UncensoredDNS"]="91.239.100.100 89.233.43.71"
     )
 
-    # Create menu options for whiptail
-
     # A through selection of recommended Secured DNS provider
     local selected_provider
-    if [ "$NON_INTERACTIVE_MODE" = true ]; then
-        # Use Quad9 as default for non-interactive mode (recommended secure DNS)
-        selected_provider="Quad9"
-        HARDN_STATUS "info" "Non-interactive mode: Using Quad9 DNS (recommended secure option)"
-    else
-        selected_provider=$(whiptail --title "DNS Provider Selection" --menu \
-            "Select a DNS provider for enhanced security and privacy:" 18 78 6 \
-            "Quad9" "DNSSEC, Malware Blocking, No Logging (Recommended)" \
-            "Cloudflare" "DNSSEC, Privacy-First, No Logging" \
-            "Google" "DNSSEC, Fast, Reliable (some logging)" \
-            "OpenDNS" "DNSSEC, Custom Filtering, Logging (opt-in)" \
-            "CleanBrowsing" "Family-safe, Malware Block, DNSSEC" \
-            "UncensoredDNS" "DNSSEC, No Logging, Europe-based, Privacy Focus" \
-            3>&1 1>&2 2>&3)
-    fi
+    # Use Quad9 as default (recommended secure DNS)
+    selected_provider="Quad9"
+    HARDN_STATUS "info" "Using Quad9 DNS (recommended secure option)"
 
     # Exit if user cancels
     if [[ -z "$selected_provider" ]]; then
@@ -1640,7 +1610,7 @@ enable_nameservers() {
 
             # Create a new resolv.conf with our DNS servers
             {
-                echo "# HARDN-XDR DNS Configuration"
+                echo "# HARDN DNS Configuration"
                 echo "# DNS Provider: $selected_provider"
                 echo "nameserver $primary_dns"
                 echo "nameserver $secondary_dns"
@@ -1657,21 +1627,11 @@ enable_nameservers() {
             changes_made=true
 
             # Make resolv.conf immutable to prevent overwriting
-            if [ "$NON_INTERACTIVE_MODE" = true ]; then
-                # In non-interactive mode, make it immutable by default for security
-                if chattr +i "$resolv_conf" 2>/dev/null; then
-                    HARDN_STATUS "pass" "Made $resolv_conf immutable to prevent changes (non-interactive default)."
-                else
-                    HARDN_STATUS "warning" "Could not make $resolv_conf immutable. Manual protection may be needed."
-                fi
+            # In headless mode, make it immutable by default for security
+            if chattr +i "$resolv_conf" 2>/dev/null; then
+                HARDN_STATUS "pass" "Made $resolv_conf immutable to prevent changes."
             else
-                if whiptail --title "Protect DNS Configuration" --yesno "Would you like to make $resolv_conf immutable to prevent other services from changing it?\n\nNote: This may interfere with DHCP or VPN services." 10 78; then
-                    if chattr +i "$resolv_conf" 2>/dev/null; then
-                        HARDN_STATUS "pass" "Made $resolv_conf immutable to prevent changes."
-                    else
-                        HARDN_STATUS "error" "Failed to make $resolv_conf immutable. Manual protection may be needed."
-                    fi
-                fi
+                HARDN_STATUS "warning" "Could not make $resolv_conf immutable. Manual protection may be needed."
             fi
         else
             HARDN_STATUS "error" "Could not modify $resolv_conf (file not found or not writable)."
@@ -1689,13 +1649,13 @@ enable_nameservers() {
 
         cat > "$hook_file" << EOF
 #!/bin/sh
-# HARDN-XDR DNS configuration hook
+# HARDN DNS configuration hook
 # DNS Provider: $selected_provider
 
 make_resolv_conf() {
     # Override the default make_resolv_conf function
     cat > /etc/resolv.conf << RESOLVCONF
-# HARDN-XDR DHCP DNS Configuration
+# HARDN DHCP DNS Configuration
 # DNS Provider: $selected_provider
 nameserver $primary_dns
 nameserver $secondary_dns
@@ -1716,9 +1676,9 @@ EOF
     fi
 
     if [[ "$changes_made" = true ]]; then
-        whiptail_infobox "DNS configured: $selected_provider\nPrimary: $primary_dns\nSecondary: $secondary_dns"
+        HARDN_STATUS "info" "DNS configured: $selected_provider - Primary: $primary_dns, Secondary: $secondary_dns"
     else
-        whiptail_infobox "DNS configuration checked. No changes made or needed."
+        HARDN_STATUS "info" "DNS configuration checked. No changes made or needed."
     fi
 
     # Test DNS resolution
@@ -1734,7 +1694,7 @@ enable_process_accounting_and_sysstat() {
         # Enable Process Accounting (acct/psacct)
         HARDN_STATUS "info" "Checking and installing acct (process accounting)..."
         if ! dpkg -s acct >/dev/null 2>&1 && ! dpkg -s psacct >/dev/null 2>&1; then
-            whiptail_infobox "Installing acct (process accounting)..."
+            HARDN_STATUS "info" "Installing acct (process accounting)..."
             if apt-get install -y acct; then
                 HARDN_STATUS "pass" "acct installed successfully."
                 changed_acct=true
@@ -1759,7 +1719,7 @@ enable_process_accounting_and_sysstat() {
         # Enable Sysstat
         HARDN_STATUS "info" "Checking and installing sysstat..."
         if ! dpkg -s sysstat >/dev/null 2>&1; then
-            whiptail_infobox "Installing sysstat..."
+            HARDN_STATUS "info" "Installing sysstat..."
             if apt-get install -y sysstat; then
                 HARDN_STATUS "pass" "sysstat installed successfully."
                 changed_sysstat=true
@@ -1911,23 +1871,23 @@ setup_central_logging() {
     HARDN_STATUS "info" "Creating log directories and files..."
     mkdir -p /usr/local/var/log/suricata
     # Note: /var/log/suricata is often created by the suricata package itself
-    touch /usr/local/var/log/suricata/hardn-xdr.log
-    chmod 640 /usr/local/var/log/suricata/hardn-xdr.log
-    chown root:adm /usr/local/var/log/suricata/hardn-xdr.log
+    touch /usr/local/var/log/suricata/hardn.log
+    chmod 640 /usr/local/var/log/suricata/hardn.log
+    chown root:adm /usr/local/var/log/suricata/hardn.log
     HARDN_STATUS "pass" "Log directory /usr/local/var/log/suricata created and permissions set."
 
 
     # Create rsyslog configuration for centralized logging
-    HARDN_STATUS "info" "Creating rsyslog configuration file /etc/rsyslog.d/30-hardn-xdr.conf..."
-    cat > /etc/rsyslog.d/30-hardn-xdr.conf << 'EOF'
-# HARDN-XDR Central Logging Configuration
-# This file is managed by HARDN-XDR for security logging.
+    HARDN_STATUS "info" "Creating rsyslog configuration file /etc/rsyslog.d/30-hardn.conf..."
+    cat > /etc/rsyslog.d/30-hardn.conf << 'EOF'
+# HARDN Central Logging Configuration
+# This file is managed by HARDN for security logging.
 
 # Create a template for security logs
 $template HARDNFormat,"%TIMESTAMP% %HOSTNAME% %syslogtag%%msg%\n"
 
 # Define the central log file path
-local5.* /usr/local/var/log/suricata/hardn-xdr.log;HARDNFormat
+local5.* /usr/local/var/log/suricata/hardn.log;HARDNFormat
 
 # Specific rules to route logs to local5 facility if they don't use it by default
 # Suricata (often uses local5, but explicit rule ensures it)
@@ -1950,14 +1910,14 @@ if $programname == 'lynis' or $syslogtag contains 'lynis' then local5.*
 # Stop processing these messages after they are sent to the central log
 & stop
 EOF
-    chmod 644 /etc/rsyslog.d/30-hardn-xdr.conf
+    chmod 644 /etc/rsyslog.d/30-hardn.conf
     HARDN_STATUS "pass" "Rsyslog configuration created/updated."
 
 
     # Create logrotate configuration for the central log
-    HARDN_STATUS "info" "Creating logrotate configuration file /etc/logrotate.d/hardn-xdr..."
-    cat > /etc/logrotate.d/hardn-xdr << 'EOF'
-/usr/local/var/log/suricata/hardn-xdr.log {
+    HARDN_STATUS "info" "Creating logrotate configuration file /etc/logrotate.d/hardn..."
+    cat > /etc/logrotate.d/hardn << 'EOF'
+/usr/local/var/log/suricata/hardn.log {
     daily
     rotate 30
     compress
@@ -1976,7 +1936,7 @@ EOF
     endscript
     # Add a prerotate script to ensure the file exists and has correct permissions before rotation
     prerotate
-        if [ ! -f /usr/local/var/log/suricata/hardn-xdr.log ]; then
+        if [ ! -f /usr/local/var/log/suricata/hardn.log ]; then
             mkdir -p /usr/local/var/log/suricata
             touch /usr/local/var/log/suricata/hardn-xdr.log
         fi
@@ -2251,7 +2211,7 @@ cleanup() {
     apt-get clean >/dev/null 2>&1
     apt-get autoclean >/dev/null 2>&1
     HARDN_STATUS "pass" "System cleanup completed. Unused packages and cache cleared."
-    whiptail_infobox "HARDN-XDR v${HARDN_VERSION} setup complete! Please reboot your system."
+    HARDN_STATUS "info" "HARDN v${HARDN_VERSION} setup complete! Please reboot your system."
     sleep 3
 
 }
@@ -2285,33 +2245,22 @@ main() {
 # Global variables for modes
 NON_INTERACTIVE_MODE=false
 
-# Wrapper function for whiptail that works in non-interactive mode
-whiptail_infobox() {
-    local message="$1"
-    if [ "$NON_INTERACTIVE_MODE" = false ]; then
-        whiptail --infobox "$message" 8 78
-    else
-        HARDN_STATUS "info" "$message"
-    fi
-}
-
 # Command line argument handling
 if [[ $# -gt 0 ]]; then
     case "$1" in
         --version|-v)
-            echo "HARDN-XDR v${HARDN_VERSION}"
+            echo "HARDN v${HARDN_VERSION}"
             echo "Linux Security Hardening Sentinel"
-            echo "Extended Detection and Response"
             echo ""
             echo "Target Systems: Debian 12+, Ubuntu 24.04+"
             echo "Features: STIG Compliance, Malware Detection, System Hardening"
             echo "Developed by: Christopher Bingham and Tim Burns"
             echo ""
-            echo "This is the final public release of HARDN-XDR."
+            echo "This is the final public release of HARDN."
             exit 0
             ;;
         --help|-h)
-            echo "HARDN-XDR v${HARDN_VERSION} - Linux Security Hardening Sentinel"
+            echo "HARDN v${HARDN_VERSION} - Linux Security Hardening Sentinel"
             echo ""
             echo "Usage: $0 [OPTIONS]"
             echo ""

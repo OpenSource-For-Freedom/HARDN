@@ -1,9 +1,9 @@
 
 
 
-# HARDN-XDR
+# HARDN
 
-[![Auto Update Dependencies](https://github.com/OpenSource-For-Freedom/HARDN-XDR/actions/workflows/validate.yml/badge.svg)](https://github.com/OpenSource-For-Freedom/HARDN-XDR/actions/workflows/validate.yml)
+[![Auto Update Dependencies](https://github.com/OpenSource-For-Freedom/HARDN/actions/workflows/validate.yml/badge.svg)](https://github.com/OpenSource-For-Freedom/HARDN/actions/workflows/validate.yml)
 
 <p align="center">
   <img src="docs/assets/HARDN(1).png" alt="HARDN Logo" width="200px" />
@@ -14,7 +14,7 @@
 
 ## Overview
 
-HARDN-XDR is an endpoint security and hardening solution for Debian-based systems that provides:
+HARDN is an endpoint security and hardening solution for Debian-based systems that provides:
 
 - **System Hardening**: Comprehensive security hardening following STIG compliance guidelines
 - **Endpoint Management**: Advanced monitoring, securing, and maintenance of network devices
@@ -28,7 +28,6 @@ HARDN-XDR is an endpoint security and hardening solution for Debian-based system
 - **Scalability**: Supports small to large-scale network deployments  
 - **STIG Compliance**: Government-grade security for Debian-based information systems
 - **Modular Architecture**: Professional CLI interface with specialized security modules
-- **GTK Dashboard**: Native GUI dashboard for monitoring and management
 - **REST API**: HTTP API for integration and remote monitoring
 
 
@@ -48,10 +47,10 @@ Download and install the latest .deb package:
 
 ```bash
 # Download the latest release
-wget https://github.com/OpenSource-For-Freedom/HARDN/releases/latest/download/hardn-xdr_2.0.0-1_all.deb
+wget https://github.com/OpenSource-For-Freedom/HARDN/releases/latest/download/hardn_2.0.0-1_all.deb
 
 # Install the package
-sudo dpkg -i hardn-xdr_2.0.0-1_all.deb
+sudo dpkg -i hardn_2.0.0-1_all.deb
 
 # Fix any dependency issues
 sudo apt-get install -f
@@ -63,7 +62,7 @@ sudo apt-get install -f
 git clone https://github.com/OpenSource-For-Freedom/HARDN.git
 cd HARDN
 dpkg-buildpackage -us -uc -b
-sudo dpkg -i ../hardn-xdr_*.deb
+sudo dpkg -i ../hardn_*.deb
 ```
 
 ### What Gets Installed
@@ -80,7 +79,7 @@ For detailed information, see [HARDN.md](docs/HARDN.md) and [deb_stig.md](docs/d
 
 ## Architecture
 
-HARDN-XDR v2.0.0 follows a modular architecture with proper Linux filesystem hierarchy compliance:
+HARDN v2.0.0 follows a modular architecture with proper Linux filesystem hierarchy compliance:
 
 ### Installation Structure
 ```
@@ -107,7 +106,7 @@ HARDN-XDR v2.0.0 follows a modular architecture with proper Linux filesystem hie
 
 ### Source Repository Structure
 ```
-HARDN-XDR/
+HARDN/
 ├── docs/                        
 │   ├── assets/                  
 │   ├── CODE_OF_CONDUCT.md       
@@ -127,7 +126,7 @@ HARDN-XDR/
 > **For detailed build documentation, see [docs/build-process.md](docs/build-process.md)**  
 > **Quick Answer**: Docker files are NOT needed for dpkg build - they're only used for testing.
 
-HARDN-XDR uses a CI/CD pipeline with testing and quality assurance:
+HARDN uses a CI/CD pipeline with testing and quality assurance:
 
 ```mermaid
 graph TD
@@ -217,51 +216,6 @@ hardn audit
 # Monitor services
 hardn monitor start
 ```
-
-### GUI Dashboard
-
-Launch the native GTK dashboard for graphical monitoring and management:
-
-```bash
-# Basic launch
-hardn dashboard
-
-# Launch with full privileges (recommended for service control)
-sudo hardn dashboard
-
-# Direct execution
-hardn-dashboard
-```
-
-#### Dashboard Features
-
-**Real-time Monitoring:**
-- **System Metrics**: Live graphs showing CPU, memory, disk, and network usage
-- **Security Services**: Status monitoring for UFW, Fail2Ban, AppArmor, ClamAV, SSH, and more  
-- **Kernel Parameters**: Display of critical security-related sysctl values
-- **System Information**: Hostname, uptime, and load average
-
-**Security Management:**
-- **Service Control**: Enable/disable security services with graphical buttons
-- **Live Logs**: Real-time viewing of authentication and security logs
-- **Status Dashboard**: Comprehensive overview of system hardening status
-
-**Interface Layout:**
-- **Left Panel**: Security services list, control buttons, and kernel parameters
-- **Right Panel**: Real-time system metrics graphs and security log viewer
-- **Header**: System information and status bar with operation feedback
-
-**Design**: Professional dark theme with Debian-inspired color scheme (slate grey, black, and red) optimized for extended monitoring sessions.
-
-#### Prerequisites
-
-The GUI dashboard requires a desktop environment and additional Python packages:
-
-```bash
-sudo apt install python3-gi python3-gi-cairo python3-matplotlib python3-psutil python3-requests gir1.2-gtk-3.0
-```
-
-These dependencies are automatically installed when using the standard HARDN-XDR installation methods.
 
 ### REST API
 

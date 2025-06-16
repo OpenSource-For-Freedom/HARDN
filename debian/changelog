@@ -1,4 +1,4 @@
-hardn-xdr (2.0.0-1) bookworm; urgency=medium
+hardn (2.0.0-1) bookworm; urgency=medium
 
   * Initial Debian package release
   * Refactored monolithic script into modular architecture

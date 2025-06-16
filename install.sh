@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# HARDN-XDR Installation Script
+# HARDN Installation Script
 # Debian package installation
 
 
@@ -17,7 +17,7 @@ check_root() {
 
 check_system() {
     if [[ ! -f /etc/debian_version ]]; then
-        echo "Error: This system is not Debian-based. HARDN-XDR requires Debian 12+ or Ubuntu 24.04+."
+        echo "Error: This system is not Debian-based. HARDN requires Debian 12+ or Ubuntu 24.04+."
         exit 1
     fi
     
@@ -53,22 +53,22 @@ install_dependencies() {
 }
 
 install_hardn_package() {
-    echo "Downloading and installing HARDN-XDR package..."
+    echo "Downloading and installing HARDN package..."
     
     local temp_dir
     temp_dir=$(mktemp -d)
     cd "${temp_dir}"
     
     # Try to download from GitHub releases first with retry logic
-    local github_url="https://github.com/OpenSource-For-Freedom/HARDN/releases/download/v${HARDN_VERSION}/hardn-xdr_${HARDN_VERSION}-1_all.deb"
+    local github_url="https://github.com/OpenSource-For-Freedom/HARDN/releases/download/v${HARDN_VERSION}/hardn_${HARDN_VERSION}-1_all.deb"
     
     MAX_RETRIES=3
     COUNT=0
     DOWNLOADED=false
     
     while [ $COUNT -lt $MAX_RETRIES ]; do
-        if curl -L -f "${github_url}" -o "hardn-xdr_${HARDN_VERSION}-1_all.deb"; then
-            echo "OK Downloaded HARDN-XDR package from GitHub releases"
+        if curl -L -f "${github_url}" -o "hardn_${HARDN_VERSION}-1_all.deb"; then
+            echo "OK Downloaded HARDN package from GitHub releases"
             DOWNLOADED=true
             break
         fi
@@ -102,12 +102,12 @@ install_hardn_package() {
         cd HARDN
         dpkg-buildpackage -us -uc -b
         cd ..
-        mv hardn-xdr_*.deb "hardn-xdr_${HARDN_VERSION}-1_all.deb"
+        mv hardn_*.deb "hardn_${HARDN_VERSION}-1_all.deb"
     fi
     
     # Install the package
-    echo "Installing HARDN-XDR package..."
-    dpkg -i "hardn-xdr_${HARDN_VERSION}-1_all.deb" || {
+    echo "Installing HARDN package..."
+    dpkg -i "hardn_${HARDN_VERSION}-1_all.deb" || {
         echo "Package installation failed. Attempting to fix dependencies..."
         apt-get install -f -y
     }
@@ -117,7 +117,7 @@ install_hardn_package() {
         echo "ERROR: hardn command not found after installation. Aborting."
         
         # Check if hardn binary exists in the package contents
-        if ! dpkg -L hardn-xdr | grep -q "/usr/bin/hardn"; then
+        if ! dpkg -L hardn | grep -q "/usr/bin/hardn"; then
             echo "hardn binary not found in package contents. Verify package integrity."
         fi
         
@@ -188,7 +188,7 @@ handle_resolv_conf() {
 show_completion() {
     cat << 'EOF'
 
-HARDN-XDR Installation Complete!
+HARDN Installation Complete!
 
 Next steps:
 1. Run system hardening:
@@ -206,14 +206,14 @@ Next steps:
 For documentation and support:
 https://github.com/OpenSource-For-Freedom/HARDN
 
-WARNING IMPORTANT: HARDN-XDR makes significant system changes.
+WARNING IMPORTANT: HARDN makes significant system changes.
    Always test in a non-production environment first.
 
 EOF
 }
 
 main() {
-    echo "HARDN-XDR v${HARDN_VERSION} Installation Script"
+    echo "HARDN v${HARDN_VERSION} Installation Script"
     echo "=============================================="
     
     check_root
