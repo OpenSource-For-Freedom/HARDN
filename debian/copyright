@@ -1,10 +1,10 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: hardn-xdr
-Upstream-Contact: Christopher Bingham <office@cybersynapse.ro>
+Upstream-Contact: SIG <office@cybersynapse.ro>
 Source: https://github.com/OpenSource-For-Freedom/HARDN
 
 Files: *
-Copyright: 2024 Christopher Bingham and Tim Burns
+Copyright: 2024 SIG
 License: MIT
 
 License: MIT
