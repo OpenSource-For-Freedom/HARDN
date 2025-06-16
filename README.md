@@ -282,6 +282,32 @@ API endpoints:
 - `GET /api/logs` - Security logs
 - `POST /api/service` - Control services
 
+## Development & Releases
+
+### Creating Releases
+
+This project uses automated releases through GitHub Actions. To create a new release:
+
+1. **Update version** in `debian/changelog` if needed
+2. **Create and push a semantic version tag**:
+   ```bash
+   git tag v2.0.1
+   git push origin v2.0.1
+   ```
+3. **Automated process** will:
+   - Build the Debian package
+   - Create GitHub release with changelog
+   - Upload `.deb` package as release asset
+
+### Tag Format
+
+Use semantic versioning for tags:
+- `v1.0.0` - Major release
+- `v1.1.0` - Minor release  
+- `v1.0.1` - Patch release
+
+The auto-release workflow triggers on any tag matching `v*.*.*` pattern.
+
 ## License
 
 This project is licensed under the MIT License.
