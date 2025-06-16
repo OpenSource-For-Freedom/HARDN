@@ -19,9 +19,13 @@ debian/.debhelper/
 debian/files
 debian/*.substvars
 debian/*.debhelper
-debian/hardn-xdr/
 debian/debhelper-build-stamp
+debian/hardn/
 *.deb
+*.buildinfo
+*.changes
+*.dsc
+*.tar.gz
 
 # IDE
 .vscode/
